@@ -107,17 +107,24 @@ public sealed class CloudFrontLookup
             return;
 
         var bucket = match.Groups["bucket"].Value.ToLowerInvariant();
-        var alias = distribution.Aliases?.Items?.FirstOrDefault(a => !a.StartsWith('*'));
+        var aliases = distribution.Aliases?.Items?.Where(a => !a.StartsWith('*')).ToList() ?? [];
+        // A bucket named after a domain (cache.example.com) is served on that domain, even when the
+        // distribution lists another one (example.com) first.
+        var alias = aliases.FirstOrDefault(a => a.Equals(bucket, StringComparison.OrdinalIgnoreCase))
+            ?? aliases.FirstOrDefault();
         var found = new BucketDistribution(
             alias ?? distribution.DomainName,
             origin.OriginPath ?? "",
             behavior?.TrustedKeyGroups?.Enabled == true || behavior?.TrustedSigners?.Enabled == true);
 
-        // Several distributions for one bucket: prefer one with a custom domain.
-        if (!map.TryGetValue(bucket, out var existing)
-            || (alias is not null && existing.Domain.EndsWith(".cloudfront.net", StringComparison.OrdinalIgnoreCase)))
-        {
+        // Several distributions for one bucket: prefer the bucket's own domain, then any custom domain.
+        if (!map.TryGetValue(bucket, out var existing) || Rank(found, bucket) > Rank(existing, bucket))
             map[bucket] = found;
-        }
     }
+
+    /// <summary>2 for the bucket's own domain, 1 for another custom domain, 0 for dxxxx.cloudfront.net.</summary>
+    private static int Rank(BucketDistribution distribution, string bucket) =>
+        distribution.Domain.Equals(bucket, StringComparison.OrdinalIgnoreCase) ? 2
+        : distribution.Domain.EndsWith(".cloudfront.net", StringComparison.OrdinalIgnoreCase) ? 0
+        : 1;
 }

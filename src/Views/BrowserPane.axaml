@@ -8,7 +8,12 @@
         <Style Selector="Button.icon">
             <Setter Property="FontFamily" Value="{StaticResource MaterialDesignIcons}" />
             <Setter Property="FontSize" Value="18" />
-            <Setter Property="Padding" Value="6,3" />
+            <!-- Toolbar-style: 24x24 and 4px apart. -->
+            <Setter Property="Width" Value="24" />
+            <Setter Property="Height" Value="24" />
+            <Setter Property="MinWidth" Value="0" />
+            <Setter Property="Margin" Value="0,0,4,0" />
+            <Setter Property="Padding" Value="0" />
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
         </Style>
@@ -58,7 +63,7 @@
                             h:Tip.Title="Home" h:Tip.Text="Go to your home folder, or to the bucket list in the S3 pane." Click="Home_Click" />
                     <Button Grid.Column="3" Classes="icon" Content="&#xF0450;"
                             h:Tip.Title="Refresh" h:Tip.Text="Reload this folder." Click="Refresh_Click" />
-                    <TextBox x:Name="PathBox" Grid.Column="4" Margin="4,0,0,0" KeyDown="PathBox_KeyDown" />
+                    <TextBox x:Name="PathBox" Grid.Column="4" KeyDown="PathBox_KeyDown" />
                 </Grid>
             </Border>
 

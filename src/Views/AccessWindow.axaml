@@ -31,11 +31,8 @@
         </Style>
     </Window.Styles>
 
-    <DockPanel Margin="16">
-        <TextBlock x:Name="HeaderText" DockPanel.Dock="Top" TextWrapping="Wrap" Margin="0,0,0,10" />
-
-        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right"
-                    Spacing="8" Margin="0,14,0,0">
+    <DockPanel>
+        <StackPanel Classes="dialogButtons" DockPanel.Dock="Bottom">
             <Button Click="MakePrivate_Click" h:Tip.Title="Make private" h:Tip.Text="Only the bucket owner and AWS accounts it grants can read these files.">
                 <StackPanel Orientation="Horizontal" Spacing="6">
                     <TextBlock Classes="icon" Text="&#xF033E;" />
@@ -59,32 +56,36 @@
             <Button Content="Cancel" Click="Cancel_Click" IsCancel="True" />
         </StackPanel>
 
-        <!-- Shown when the bucket's settings mean files can't be made public. -->
-        <TextBlock x:Name="WarningText" DockPanel.Dock="Bottom" Margin="0,8,0,0" TextWrapping="Wrap"
-                   Foreground="#E8A33D" IsVisible="False" />
+        <DockPanel Margin="16,16,16,6">
+            <TextBlock x:Name="HeaderText" DockPanel.Dock="Top" TextWrapping="Wrap" Margin="0,0,0,10" />
 
-        <TextBlock DockPanel.Dock="Bottom" Margin="0,8,0,0" TextWrapping="Wrap"
-                   Foreground="{DynamicResource MintDimTextBrush}"
-                   Text="Hover over a state to see why. This changes each file's ACL, so it has no effect in buckets with ACLs turned off, and a public bucket policy still applies." />
+            <!-- Shown when the bucket's settings mean files can't be made public. -->
+            <TextBlock x:Name="WarningText" DockPanel.Dock="Bottom" Margin="0,8,0,0" TextWrapping="Wrap"
+                       Foreground="#E8A33D" IsVisible="False" />
 
-        <!-- The same items as the S3 pane, so states still being checked fill in here too. -->
-        <ListBox x:Name="FileList" SelectionMode="Single">
-            <ListBox.ItemTemplate>
-                <DataTemplate x:DataType="m:BrowserItem">
-                    <Grid ColumnDefinitions="Auto,*,Auto">
-                        <TextBlock Classes="icon" Text="{Binding Icon}" Margin="0,0,8,0" />
-                        <TextBlock Grid.Column="1" Text="{Binding Name}" VerticalAlignment="Center"
-                                   TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Path}" />
-                        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" Margin="12,0,0,0"
-                                    Background="Transparent" ToolTip.Tip="{Binding AccessNote}">
-                            <TextBlock Classes="icon state" Classes.public="{Binding IsPublic}"
-                                       Text="{Binding AccessIcon}" />
-                            <TextBlock Classes="state" Classes.public="{Binding IsPublic}"
-                                       Text="{Binding AccessText}" VerticalAlignment="Center" MinWidth="70" />
-                        </StackPanel>
-                    </Grid>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
+            <TextBlock DockPanel.Dock="Bottom" Margin="0,8,0,0" TextWrapping="Wrap"
+                       Foreground="{DynamicResource MintDimTextBrush}"
+                       Text="Hover over a state to see why. This changes each file's ACL, so it has no effect in buckets with ACLs turned off, and a public bucket policy still applies." />
+
+            <!-- The same items as the S3 pane, so states still being checked fill in here too. -->
+            <ListBox x:Name="FileList" SelectionMode="Single">
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="m:BrowserItem">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <TextBlock Classes="icon" Text="{Binding Icon}" Margin="0,0,8,0" />
+                            <TextBlock Grid.Column="1" Text="{Binding Name}" VerticalAlignment="Center"
+                                       TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Path}" />
+                            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" Margin="12,0,0,0"
+                                        Background="Transparent" ToolTip.Tip="{Binding AccessNote}">
+                                <TextBlock Classes="icon state" Classes.public="{Binding IsPublic}"
+                                           Text="{Binding AccessIcon}" />
+                                <TextBlock Classes="state" Classes.public="{Binding IsPublic}"
+                                           Text="{Binding AccessText}" VerticalAlignment="Center" MinWidth="70" />
+                            </StackPanel>
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </DockPanel>
     </DockPanel>
 </v:DialogWindow>

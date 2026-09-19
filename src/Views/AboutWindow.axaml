@@ -15,31 +15,33 @@
         </Style>
     </Window.Styles>
 
-    <StackPanel Margin="24,20" Spacing="12">
-        <Grid ColumnDefinitions="Auto,*">
-            <!-- cloud-outline icon -->
-            <TextBlock Text="&#xF0163;" FontFamily="{StaticResource MaterialDesignIcons}" FontSize="48"
-                       Foreground="{DynamicResource MintAccentBrush}" VerticalAlignment="Center" Margin="0,0,16,0" />
-            <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
-                <TextBlock x:Name="NameText" FontSize="22" FontWeight="Bold" />
-                <TextBlock x:Name="VersionText" Foreground="{DynamicResource MintDimTextBrush}" />
-            </StackPanel>
-        </Grid>
-
-        <TextBlock TextWrapping="Wrap"
-                   Text="A two-pane file manager for Amazon S3. Browse the files on this computer next to your S3 buckets, and copy between them by button, drag and drop, or copy and paste." />
-        <TextBlock TextWrapping="Wrap"
-                   Text="Keep several AWS accounts as named profiles, stored encrypted. Create, rename and delete folders and buckets; make files public or private; and share them with CloudFront links, S3 links or temporary links that expire." />
-
-        <TextBlock Text="Build information" FontWeight="Bold" Margin="0,6,0,0" />
-        <Border Background="{DynamicResource MintViewBrush}" CornerRadius="3" Padding="10,8">
-            <!-- Selectable, so it can be copied into a bug report. -->
-            <Grid x:Name="DetailsGrid" ColumnDefinitions="Auto,*" />
-        </Border>
-
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,4,0,0">
+    <DockPanel>
+        <StackPanel Classes="dialogButtons" DockPanel.Dock="Bottom">
             <Button Content="Copy build information" Click="CopyDetails_Click" />
             <Button Content="Close" Classes="accent" IsDefault="True" IsCancel="True" Click="Close_Click" />
         </StackPanel>
-    </StackPanel>
+
+        <StackPanel Margin="24,20,24,4" Spacing="12">
+            <Grid ColumnDefinitions="Auto,*">
+                <!-- The app icon -->
+                <Image Source="/resources/icon.png" Width="48" Height="48"
+                       VerticalAlignment="Center" Margin="0,0,16,0" />
+                <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                    <TextBlock x:Name="NameText" FontSize="22" FontWeight="Bold" />
+                    <TextBlock x:Name="VersionText" Foreground="{DynamicResource MintDimTextBrush}" />
+                </StackPanel>
+            </Grid>
+
+            <TextBlock TextWrapping="Wrap"
+                       Text="A two-pane file manager for Amazon S3. Browse the files on this computer next to your S3 buckets, and copy between them by button, drag and drop, or copy and paste." />
+            <TextBlock TextWrapping="Wrap"
+                       Text="Keep several AWS accounts as named profiles, stored encrypted. Create, rename and delete folders and buckets; make files public or private; and share them with CloudFront links, S3 links or temporary links that expire." />
+
+            <TextBlock Text="Build information" FontWeight="Bold" Margin="0,6,0,0" />
+            <Border Background="{DynamicResource MintViewBrush}" CornerRadius="3" Padding="10,8">
+                <!-- Selectable, so it can be copied into a bug report. -->
+                <Grid x:Name="DetailsGrid" ColumnDefinitions="Auto,*" />
+            </Border>
+        </StackPanel>
+    </DockPanel>
 </v:DialogWindow>

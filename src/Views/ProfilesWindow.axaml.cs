@@ -171,5 +171,24 @@ public partial class ProfilesWindow : DialogWindow
         UpdateButtons();
     }
 
-    private void Close_Click(object? sender, RoutedEventArgs e) => Close();
+    /// <summary>Switches to the profile selected in the list (if it's saved), then closes.</summary>
+    private void Ok_Click(object? sender, RoutedEventArgs e)
+    {
+        if (ProfileList.SelectedItem is Profile profile)
+        {
+            try
+            {
+                _profiles.SetActive(profile.Id);
+            }
+            catch (Exception ex)
+            {
+                ShowError($"Could not switch profile: {ex.Message}");
+                return;
+            }
+        }
+
+        Close();
+    }
+
+    private void Cancel_Click(object? sender, RoutedEventArgs e) => Close();
 }

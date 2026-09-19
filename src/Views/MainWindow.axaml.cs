@@ -235,7 +235,11 @@ public partial class MainWindow : Window
         AccessToolGroup.IsVisible = files.Count > 0;
         CopyUrlToolButton.IsVisible = files.Any(f => f.ShareUrl is not null);
         ShareLinkToolButton.IsVisible = files.Any(f => f.Access != ObjectAccess.Public);
+        UpdateShareLinkMenuItem();
     }
+
+    private void UpdateShareLinkMenuItem() =>
+        ShareLinkMenuItem.IsEnabled = AccessToolGroup.IsVisible && ShareLinkToolButton.IsVisible && ShareLinkToolButton.IsEnabled;
 
     private void Refresh_Click(object? sender, RoutedEventArgs e) => _ = _activePane.RefreshAsync();
 
@@ -298,6 +302,7 @@ public partial class MainWindow : Window
         DownloadToolButton.IsEnabled = !running;
         AccessToolButton.IsEnabled = !running;
         ShareLinkToolButton.IsEnabled = !running;
+        UpdateShareLinkMenuItem();
         // Switching profile mid-transfer would make the S3 pane show a different account.
         ProfilesMenu.IsEnabled = !running;
         ProfilesToolButton.IsEnabled = !running;

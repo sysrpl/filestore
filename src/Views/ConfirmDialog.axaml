@@ -8,11 +8,14 @@
         ShowInTaskbar="False"
         WindowStartupLocation="CenterOwner">
 
-    <StackPanel Margin="20" Spacing="16" MinWidth="300" MaxWidth="420">
-        <TextBlock x:Name="MessageText" TextWrapping="Wrap" />
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+    <DockPanel>
+        <StackPanel Classes="dialogButtons" DockPanel.Dock="Bottom">
             <Button Content="Yes" Click="Yes_Click" IsDefault="True" />
             <Button Content="No" Click="No_Click" IsCancel="True" />
         </StackPanel>
-    </StackPanel>
+
+        <StackPanel Margin="20,20,20,4" Spacing="16" MinWidth="300" MaxWidth="420">
+            <TextBlock x:Name="MessageText" TextWrapping="Wrap" />
+        </StackPanel>
+    </DockPanel>
 </v:DialogWindow>

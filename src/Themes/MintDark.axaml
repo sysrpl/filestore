@@ -48,10 +48,10 @@
             <SolidColorBrush x:Key="MintTipBrush" Color="#262626" />
             <SolidColorBrush x:Key="MintTipBorderBrush" Color="#5A5A5A" />
 
-            <!-- Font: Ubuntu 11pt (11pt = 14.667 device-independent pixels). The folder form loads every
+            <!-- Font: Ubuntu Regular 10pt (10pt = 13.333 device-independent pixels). The folder form loads every
                  "Ubuntu" font in resources/ (Ubuntu-Regular.ttf, Ubuntu-Bold.ttf), so bold text uses the real bold. -->
             <FontFamily x:Key="ContentControlThemeFontFamily">avares://filestore/resources#Ubuntu</FontFamily>
-            <x:Double x:Key="ControlContentThemeFontSize">14.667</x:Double>
+            <x:Double x:Key="ControlContentThemeFontSize">13.333</x:Double>
 
             <CornerRadius x:Key="ControlCornerRadius">3</CornerRadius>
             <CornerRadius x:Key="OverlayCornerRadius">4</CornerRadius>
@@ -162,9 +162,41 @@
     <Style Selector="Window">
         <Setter Property="Background" Value="{DynamicResource MintWindowBrush}" />
         <Setter Property="Foreground" Value="{DynamicResource MintTextBrush}" />
+        <Setter Property="FontFamily" Value="{DynamicResource ContentControlThemeFontFamily}" />
+        <Setter Property="FontSize" Value="{DynamicResource ControlContentThemeFontSize}" />
+        <!-- The app icon, shown in the taskbar and title bars. -->
+        <Setter Property="Icon" Value="/resources/icon.png" />
+    </Style>
+
+    <!-- Buttons: 25px tall and at least 75px wide. Toolbar and icon buttons override this in their views. -->
+    <Style Selector="Button">
+        <Setter Property="Height" Value="25" />
+        <Setter Property="MinWidth" Value="75" />
+        <Setter Property="Padding" Value="8,0" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <!-- A dialog's row of buttons: 8px from the window's edges and 8px apart. -->
+    <Style Selector="StackPanel.dialogButtons">
+        <Setter Property="Orientation" Value="Horizontal" />
+        <Setter Property="HorizontalAlignment" Value="Right" />
+        <Setter Property="Spacing" Value="8" />
+        <Setter Property="Margin" Value="8" />
     </Style>
     <Style Selector="Menu">
         <Setter Property="Background" Value="{DynamicResource MintChromeBrush}" />
+    </Style>
+    <!--
+        Menus are short enough to never scroll. Fluent wraps each drop-down in a scroll viewer that shows
+        a down chevron when the content is a fraction of a pixel taller than the popup (fractional font
+        sizes such as 10pt = 13.333px cause this), so turn the scrolling off.
+    -->
+    <Style Selector="MenuItem /template/ ScrollViewer, ContextMenu /template/ ScrollViewer">
+        <Setter Property="VerticalScrollBarVisibility" Value="Disabled" />
+    </Style>
+    <!-- Menu separators: half as visible, so they divide without drawing attention. -->
+    <Style Selector="Separator">
+        <Setter Property="Opacity" Value="0.5" />
     </Style>
     <Style Selector="GridSplitter">
         <Setter Property="Background" Value="{DynamicResource MintChromeBrush}" />

@@ -6,7 +6,7 @@ using filestore.Services;
 namespace filestore.Views;
 
 /// <summary>Asks how long a temporary (presigned) link should work. Returns null when cancelled.</summary>
-public partial class ShareLinkDialog : Window
+public partial class ShareLinkDialog : DialogWindow
 {
     private const int MinutesIndex = 0;
     private const int HoursIndex = 1;
@@ -26,7 +26,7 @@ public partial class ShareLinkDialog : Window
             ? "Create a temporary link to download this file:"
             : $"Create temporary links to download these {files.Count} files:";
         dialog.FileNamesText.Text = string.Join("\n", files.Select(f => f.Name));
-        return dialog.ShowDialog<TimeSpan?>(owner);
+        return dialog.ShowModalAsync<TimeSpan?>(owner);
     }
 
     /// <summary>The chosen duration, or null if it isn't set.</summary>
@@ -76,8 +76,8 @@ public partial class ShareLinkDialog : Window
     {
         var duration = Duration();
         if (Validate(duration) is null)
-            Close(duration);
+            CloseWith(duration);
     }
 
-    private void Cancel_Click(object? sender, RoutedEventArgs e) => Close(null);
+    private void Cancel_Click(object? sender, RoutedEventArgs e) => Close();
 }

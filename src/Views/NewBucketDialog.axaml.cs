@@ -1,20 +1,17 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using filestore.Helpers;
 using filestore.Services;
-using RegionEndpoint = Amazon.RegionEndpoint;
 
 namespace filestore.Views;
 
 /// <summary>Asks for a new bucket's name and region. Returns null when cancelled.</summary>
-public partial class NewBucketDialog : Window
+public partial class NewBucketDialog : DialogWindow
 {
     public NewBucketDialog()
     {
         InitializeComponent();
-        RegionBox.ItemsSource = RegionEndpoint.EnumerableAllRegions
-            .Select(r => r.SystemName)
-            .Order()
-            .ToList();
+        RegionBox.ItemsSource = AwsRegions.Names;
     }
 
     public static Task<(string Name, string Region, bool AllowPublic)?> AskAsync(Window owner, string defaultRegion)
@@ -22,7 +19,7 @@ public partial class NewBucketDialog : Window
         var dialog = new NewBucketDialog();
         dialog.RegionBox.SelectedItem = defaultRegion;
         dialog.Opened += (_, _) => dialog.NameBox.Focus();
-        return dialog.ShowDialog<(string Name, string Region, bool AllowPublic)?>(owner);
+        return dialog.ShowModalAsync<(string Name, string Region, bool AllowPublic)?>(owner);
     }
 
     private void Create_Click(object? sender, RoutedEventArgs e)
@@ -39,8 +36,8 @@ public partial class NewBucketDialog : Window
             NameBox.Focus();
             return;
         }
-        Close(((string Name, string Region, bool AllowPublic)?)(name, region!, AllowPublicCheck.IsChecked == true));
+        CloseWith((name, region!, AllowPublicCheck.IsChecked == true));
     }
 
-    private void Cancel_Click(object? sender, RoutedEventArgs e) => Close(null);
+    private void Cancel_Click(object? sender, RoutedEventArgs e) => Close();
 }

@@ -1,4 +1,5 @@
-<Window xmlns="https://github.com/avaloniaui"
+<v:DialogWindow xmlns="https://github.com/avaloniaui"
+        xmlns:v="using:filestore.Views"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="filestore.Views.ConfirmDialog"
         Title="Confirm"
@@ -14,4 +15,4 @@
             <Button Content="No" Click="No_Click" IsCancel="True" />
         </StackPanel>
     </StackPanel>
-</Window>
+</v:DialogWindow>

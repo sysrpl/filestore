@@ -5,7 +5,7 @@ using filestore.Services;
 namespace filestore.Views;
 
 /// <summary>Edits the user's <see cref="AppSettings"/> (Edit > Preferences) and saves them on OK.</summary>
-public partial class PreferencesWindow : Window
+public partial class PreferencesWindow : DialogWindow
 {
     private readonly SettingsService _settings = null!;
 

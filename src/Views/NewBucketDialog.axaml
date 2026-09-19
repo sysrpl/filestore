@@ -1,4 +1,5 @@
-<Window xmlns="https://github.com/avaloniaui"
+<v:DialogWindow xmlns="https://github.com/avaloniaui"
+        xmlns:v="using:filestore.Views"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="filestore.Views.NewBucketDialog"
         Title="New Bucket"
@@ -29,4 +30,4 @@
             <Button Content="Cancel" IsCancel="True" Click="Cancel_Click" />
         </StackPanel>
     </StackPanel>
-</Window>
+</v:DialogWindow>

@@ -1,3 +1,5 @@
+using filestore.Helpers;
+
 namespace filestore.Models;
 
 /// <summary>One set of AWS credentials, identified by a friendly name.</summary>
@@ -7,7 +9,7 @@ public sealed class Profile
     public string Name { get; set; } = "";
     public string AccessKeyId { get; set; } = "";
     public string SecretAccessKey { get; set; } = "";
-    public string Region { get; set; } = "us-east-1";
+    public string Region { get; set; } = AwsRegions.Default;
 
     public override string ToString() => Name;
 }

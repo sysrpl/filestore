@@ -8,7 +8,7 @@ namespace filestore.Views;
 /// Warns about deleting a bucket and only enables "Delete bucket" once the bucket's name has been
 /// typed, like the AWS console. Returns true to delete.
 /// </summary>
-public partial class DeleteBucketDialog : Window
+public partial class DeleteBucketDialog : DialogWindow
 {
     private string _bucket = "";
 
@@ -27,14 +27,14 @@ public partial class DeleteBucketDialog : Window
             dialog.WarningList.Children.Add(new TextBlock { Text = "• " + warning, TextWrapping = TextWrapping.Wrap });
         dialog.ConfirmPrompt.Text = $"To confirm, type the bucket name ({bucket}):";
         dialog.Opened += (_, _) => dialog.ConfirmBox.Focus();
-        return dialog.ShowDialog<bool>(owner);
+        return dialog.ShowModalAsync<bool>(owner);
     }
 
     private void Delete_Click(object? sender, RoutedEventArgs e)
     {
         if (ConfirmBox.Text == _bucket)
-            Close(true);
+            CloseWith(true);
     }
 
-    private void Cancel_Click(object? sender, RoutedEventArgs e) => Close(false);
+    private void Cancel_Click(object? sender, RoutedEventArgs e) => Close();
 }

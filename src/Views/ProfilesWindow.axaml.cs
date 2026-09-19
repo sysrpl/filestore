@@ -1,17 +1,15 @@
 using System.Collections.ObjectModel;
-using RegionEndpoint = Amazon.RegionEndpoint;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using filestore.Helpers;
 using filestore.Models;
 using filestore.Services;
 
 namespace filestore.Views;
 
 /// <summary>Dialog for adding, editing, deleting and activating AWS profiles.</summary>
-public partial class ProfilesWindow : Window
+public partial class ProfilesWindow : DialogWindow
 {
-    private const string DefaultRegion = "us-east-1";
-
     private readonly ProfileService _profiles = null!;
     private readonly ObservableCollection<Profile> _items = new();
 
@@ -27,10 +25,7 @@ public partial class ProfilesWindow : Window
     public ProfilesWindow(ProfileService profiles) : this()
     {
         _profiles = profiles;
-        RegionBox.ItemsSource = RegionEndpoint.EnumerableAllRegions
-            .Select(r => r.SystemName)
-            .Order()
-            .ToList();
+        RegionBox.ItemsSource = AwsRegions.Names;
         ProfileList.ItemsSource = _items;
         Reload(profiles.ActiveProfile?.Id);
     }
@@ -55,7 +50,7 @@ public partial class ProfilesWindow : Window
         NameBox.Text = "";
         AccessKeyBox.Text = "";
         SecretKeyBox.Text = "";
-        RegionBox.SelectedItem = DefaultRegion;
+        RegionBox.SelectedItem = AwsRegions.Default;
         ShowError(null);
         UpdateButtons();
         NameBox.Focus();
@@ -125,7 +120,7 @@ public partial class ProfilesWindow : Window
                 Name = name,
                 AccessKeyId = accessKey,
                 SecretAccessKey = secretKey,
-                Region = RegionBox.SelectedItem as string ?? DefaultRegion,
+                Region = RegionBox.SelectedItem as string ?? AwsRegions.Default,
             });
         }
         catch (Exception ex)

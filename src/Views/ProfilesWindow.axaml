@@ -1,4 +1,5 @@
-<Window xmlns="https://github.com/avaloniaui"
+<v:DialogWindow xmlns="https://github.com/avaloniaui"
+        xmlns:v="using:filestore.Views"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:m="using:filestore.Models"
         x:Class="filestore.Views.ProfilesWindow"
@@ -57,4 +58,4 @@
             </StackPanel>
         </Grid>
     </DockPanel>
-</Window>
+</v:DialogWindow>

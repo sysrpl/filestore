@@ -19,7 +19,7 @@ public enum AccessChoice
 /// Lists S3 files with their current public/private state and asks which to change them to.
 /// Returns null when cancelled.
 /// </summary>
-public partial class AccessWindow : Window
+public partial class AccessWindow : DialogWindow
 {
     public AccessWindow()
     {
@@ -44,15 +44,15 @@ public partial class AccessWindow : Window
         var count = files.Count == 1 ? "1 selected file" : $"{files.Count} selected files";
         dialog.HeaderText.Text = $"Make the {count} in {folder} public or private?";
         dialog.FileList.ItemsSource = files;
-        return dialog.ShowDialog<AccessChoice?>(owner);
+        return dialog.ShowModalAsync<AccessChoice?>(owner);
     }
 
-    private void MakePrivate_Click(object? sender, RoutedEventArgs e) => Close((AccessChoice?)AccessChoice.MakePrivate);
+    private void MakePrivate_Click(object? sender, RoutedEventArgs e) => CloseWith(AccessChoice.MakePrivate);
 
-    private void MakePublic_Click(object? sender, RoutedEventArgs e) => Close((AccessChoice?)AccessChoice.MakePublic);
+    private void MakePublic_Click(object? sender, RoutedEventArgs e) => CloseWith(AccessChoice.MakePublic);
 
     private void AllowPublic_Click(object? sender, RoutedEventArgs e) =>
-        Close((AccessChoice?)AccessChoice.AllowPublicThenMakePublic);
+        CloseWith(AccessChoice.AllowPublicThenMakePublic);
 
-    private void Cancel_Click(object? sender, RoutedEventArgs e) => Close(null);
+    private void Cancel_Click(object? sender, RoutedEventArgs e) => Close();
 }

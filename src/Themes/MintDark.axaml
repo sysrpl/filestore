@@ -150,6 +150,8 @@
             <x:Double x:Key="DataGridRowSelectedHoveredBackgroundOpacity">1</x:Double>
             <x:Double x:Key="DataGridRowSelectedUnfocusedBackgroundOpacity">1</x:Double>
             <x:Double x:Key="DataGridRowSelectedHoveredUnfocusedBackgroundOpacity">1</x:Double>
+            <!-- Room kept for the sort arrow. Fluent's 32 makes narrow headers wider than their column. -->
+            <x:Double x:Key="DataGridSortIconMinWidth">16</x:Double>
             <!-- No box around the current cell; the whole row is highlighted instead, like Nemo. -->
             <SolidColorBrush x:Key="DataGridCellFocusVisualPrimaryBrush" Color="Transparent" />
             <SolidColorBrush x:Key="DataGridCellFocusVisualSecondaryBrush" Color="Transparent" />
@@ -181,6 +183,15 @@
         <!-- Visible dividers between headers, so it's clear where to drag to resize a column. -->
         <Setter Property="AreSeparatorsVisible" Value="True" />
         <Setter Property="SeparatorBrush" Value="#5A5A5A" />
+        <!--
+            Trim the title with "..." when the column is narrow. Untrimmed, a header wider than its
+            column is clipped on the right, and its divider is clipped with it.
+        -->
+        <Setter Property="ContentTemplate">
+            <DataTemplate x:DataType="x:String">
+                <TextBlock Text="{Binding}" TextTrimming="CharacterEllipsis" />
+            </DataTemplate>
+        </Setter>
     </Style>
     <!-- Keep the list scrollbars on screen instead of hiding them until the pointer is over them. -->
     <Style Selector="DataGrid ScrollBar">

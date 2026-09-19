@@ -4,7 +4,7 @@ using Avalonia.Interactivity;
 namespace filestore.Views;
 
 /// <summary>Asks for a single line of text (a file or folder name). Returns null when cancelled.</summary>
-public partial class TextInputDialog : Window
+public partial class TextInputDialog : DialogWindow
 {
     private Func<string, string?> _validate = _ => null;
 
@@ -29,7 +29,7 @@ public partial class TextInputDialog : Window
             dialog.InputBox.SelectionStart = 0;
             dialog.InputBox.SelectionEnd = selectLength ?? initialText.Length;
         };
-        return dialog.ShowDialog<string?>(owner);
+        return dialog.ShowModalAsync<string?>(owner);
     }
 
     private void Ok_Click(object? sender, RoutedEventArgs e)
@@ -42,8 +42,8 @@ public partial class TextInputDialog : Window
             InputBox.Focus();
             return;
         }
-        Close(text);
+        CloseWith(text);
     }
 
-    private void Cancel_Click(object? sender, RoutedEventArgs e) => Close(null);
+    private void Cancel_Click(object? sender, RoutedEventArgs e) => Close();
 }

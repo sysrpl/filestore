@@ -95,8 +95,12 @@
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
 
-                        <!-- S3 only (see BrowserPane.Initialize). Filled in after the list loads. -->
-                        <DataGridTemplateColumn Header="Access" Width="64" MinWidth="40" SortMemberPath="Access" CanUserSort="True"
+                        <!--
+                            S3 only (see BrowserPane.Initialize). Filled in after the list loads.
+                            Widths are multiples of 10 so they're whole pixels at 110% display
+                            scaling; otherwise the next header covers this one's 1px divider.
+                        -->
+                        <DataGridTemplateColumn Header="Access" Width="90" MinWidth="40" SortMemberPath="Access" CanUserSort="True"
                                                 CustomSortComparer="{x:Static m:BrowserItemComparer.ByAccess}">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate x:DataType="m:BrowserItem">

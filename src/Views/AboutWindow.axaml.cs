@@ -6,7 +6,7 @@ using filestore.Helpers;
 namespace filestore.Views;
 
 /// <summary>Help > About: the program's name, what it does, and build information.</summary>
-public partial class AboutWindow : Window
+public partial class AboutWindow : DialogWindow
 {
     public AboutWindow()
     {

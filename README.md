@@ -4,6 +4,8 @@ A two-pane desktop file manager for Amazon S3. Your local files are on one side 
 
 Built with .NET 8 and [Avalonia](https://avaloniaui.net/), so it runs on Linux, Windows and macOS.
 
+![S3 File Explorer: local files on the left, an S3 bucket on the right](images/screenshot.png)
+
 ## Features
 
 - **Two panes**: local files and S3 side by side, with sortable, resizable columns. The sides can be swapped in Preferences.
@@ -129,7 +131,7 @@ src/
   Themes/MintDark.axaml   the dark theme
   Helpers/                icons, tooltips, build information
 resources/              Ubuntu fonts, Material Design Icons font
-docs/plan.txt           design notes and feature plan
+images/                 screenshots for this README
 ```
 
 ## Credits

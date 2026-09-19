@@ -1,0 +1,20 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="filestore.Views.TextInputDialog"
+        Title="Name"
+        SizeToContent="Height"
+        Width="460"
+        CanResize="False"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner">
+
+    <StackPanel Margin="20" Spacing="10">
+        <TextBlock x:Name="PromptText" TextWrapping="Wrap" />
+        <TextBox x:Name="InputBox" />
+        <TextBlock x:Name="ErrorText" Classes="error" TextWrapping="Wrap" IsVisible="False" />
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,6,0,0">
+            <Button x:Name="OkButton" Content="OK" Classes="accent" IsDefault="True" Click="Ok_Click" />
+            <Button Content="Cancel" IsCancel="True" Click="Cancel_Click" />
+        </StackPanel>
+    </StackPanel>
+</Window>

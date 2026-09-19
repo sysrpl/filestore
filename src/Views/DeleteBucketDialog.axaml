@@ -1,0 +1,43 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="filestore.Views.DeleteBucketDialog"
+        Title="Delete Bucket"
+        SizeToContent="Height"
+        Width="520"
+        CanResize="False"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner">
+
+    <Window.Styles>
+        <Style Selector="Button.danger">
+            <Setter Property="Background" Value="{DynamicResource MintErrorBrush}" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+        <Style Selector="Button.danger:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#D9666C" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+    </Window.Styles>
+
+    <StackPanel Margin="20" Spacing="10">
+        <Grid ColumnDefinitions="Auto,*">
+            <!-- alert icon -->
+            <TextBlock Text="&#xF0026;" FontFamily="{StaticResource MaterialDesignIcons}" FontSize="32"
+                       Foreground="{DynamicResource MintErrorBrush}" VerticalAlignment="Top" Margin="0,0,14,0" />
+            <TextBlock x:Name="HeadingText" Grid.Column="1" FontSize="16" TextWrapping="Wrap"
+                       VerticalAlignment="Center" />
+        </Grid>
+
+        <!-- One line per consequence, filled in from code. -->
+        <StackPanel x:Name="WarningList" Spacing="4" />
+
+        <TextBlock x:Name="ConfirmPrompt" Margin="0,6,0,0" TextWrapping="Wrap" />
+        <TextBox x:Name="ConfirmBox" />
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,8,0,0">
+            <Button x:Name="DeleteButton" Classes="danger" Content="Delete bucket" IsEnabled="False"
+                    Click="Delete_Click" />
+            <Button Content="Cancel" IsCancel="True" IsDefault="True" Click="Cancel_Click" />
+        </StackPanel>
+    </StackPanel>
+</Window>

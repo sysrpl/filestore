@@ -1,0 +1,240 @@
+<!--
+    Dark theme modelled on Linux Mint's Mint-Y-Dark-Aqua (as seen in Nemo).
+    Sits on top of FluentTheme (dark variant): the palette in App.axaml sets the
+    base colors; this file overrides specific Fluent / DataGrid resources and
+    adds a few styles. Colors are sampled from a Nemo screenshot.
+-->
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Styles.Resources>
+        <ResourceDictionary>
+            <!-- Palette -->
+            <Color x:Key="MintChromeColor">#2F2F2F</Color>      <!-- menu bar, toolbars -->
+            <Color x:Key="MintSidebarColor">#353535</Color>     <!-- pane titles, column headers -->
+            <Color x:Key="MintWindowColor">#383838</Color>      <!-- window / dialog background -->
+            <Color x:Key="MintViewColor">#404040</Color>        <!-- file lists -->
+            <Color x:Key="MintEntryColor">#424242</Color>       <!-- text boxes -->
+            <Color x:Key="MintButtonColor">#454545</Color>
+            <Color x:Key="MintButtonHoverColor">#4F4F4F</Color>
+            <Color x:Key="MintButtonPressedColor">#3A3A3A</Color>
+            <Color x:Key="MintHoverColor">#4A4A4A</Color>
+            <Color x:Key="MintBorderColor">#2B2B2B</Color>
+            <Color x:Key="MintAccentColor">#6AA0BD</Color>
+            <Color x:Key="MintTextColor">#DADADA</Color>
+            <Color x:Key="MintDimTextColor">#BBBBBB</Color>
+            <Color x:Key="MintDisabledTextColor">#7A7A7A</Color>
+            <Color x:Key="MintSelectedTextColor">#FFFFFF</Color>
+            <Color x:Key="MintFolderColor">#8BB158</Color>
+            <Color x:Key="MintErrorColor">#CC575D</Color>
+
+            <SolidColorBrush x:Key="MintChromeBrush" Color="{StaticResource MintChromeColor}" />
+            <SolidColorBrush x:Key="MintSidebarBrush" Color="{StaticResource MintSidebarColor}" />
+            <SolidColorBrush x:Key="MintWindowBrush" Color="{StaticResource MintWindowColor}" />
+            <SolidColorBrush x:Key="MintViewBrush" Color="{StaticResource MintViewColor}" />
+            <SolidColorBrush x:Key="MintEntryBrush" Color="{StaticResource MintEntryColor}" />
+            <SolidColorBrush x:Key="MintButtonBrush" Color="{StaticResource MintButtonColor}" />
+            <SolidColorBrush x:Key="MintButtonHoverBrush" Color="{StaticResource MintButtonHoverColor}" />
+            <SolidColorBrush x:Key="MintButtonPressedBrush" Color="{StaticResource MintButtonPressedColor}" />
+            <SolidColorBrush x:Key="MintHoverBrush" Color="{StaticResource MintHoverColor}" />
+            <SolidColorBrush x:Key="MintBorderBrush" Color="{StaticResource MintBorderColor}" />
+            <SolidColorBrush x:Key="MintAccentBrush" Color="{StaticResource MintAccentColor}" />
+            <SolidColorBrush x:Key="MintTextBrush" Color="{StaticResource MintTextColor}" />
+            <SolidColorBrush x:Key="MintDimTextBrush" Color="{StaticResource MintDimTextColor}" />
+            <SolidColorBrush x:Key="MintDisabledTextBrush" Color="{StaticResource MintDisabledTextColor}" />
+            <SolidColorBrush x:Key="MintSelectedTextBrush" Color="{StaticResource MintSelectedTextColor}" />
+            <SolidColorBrush x:Key="MintFolderBrush" Color="{StaticResource MintFolderColor}" />
+            <SolidColorBrush x:Key="MintErrorBrush" Color="{StaticResource MintErrorColor}" />
+            <SolidColorBrush x:Key="MintTipBrush" Color="#262626" />
+            <SolidColorBrush x:Key="MintTipBorderBrush" Color="#5A5A5A" />
+
+            <!-- Font: Ubuntu 11pt (11pt = 14.667 device-independent pixels). The folder form loads every
+                 "Ubuntu" font in resources/ (Ubuntu-Regular.ttf, Ubuntu-Bold.ttf), so bold text uses the real bold. -->
+            <FontFamily x:Key="ContentControlThemeFontFamily">avares://filestore/resources#Ubuntu</FontFamily>
+            <x:Double x:Key="ControlContentThemeFontSize">14.667</x:Double>
+
+            <CornerRadius x:Key="ControlCornerRadius">3</CornerRadius>
+            <CornerRadius x:Key="OverlayCornerRadius">4</CornerRadius>
+
+            <!-- Text boxes -->
+            <StaticResource x:Key="TextControlBackground" ResourceKey="MintEntryBrush" />
+            <StaticResource x:Key="TextControlBackgroundPointerOver" ResourceKey="MintEntryBrush" />
+            <StaticResource x:Key="TextControlBackgroundFocused" ResourceKey="MintEntryBrush" />
+            <StaticResource x:Key="TextControlBackgroundDisabled" ResourceKey="MintWindowBrush" />
+            <StaticResource x:Key="TextControlBorderBrush" ResourceKey="MintBorderBrush" />
+            <StaticResource x:Key="TextControlBorderBrushPointerOver" ResourceKey="MintBorderBrush" />
+            <StaticResource x:Key="TextControlBorderBrushFocused" ResourceKey="MintAccentBrush" />
+            <StaticResource x:Key="TextControlForeground" ResourceKey="MintTextBrush" />
+            <StaticResource x:Key="TextControlForegroundPointerOver" ResourceKey="MintTextBrush" />
+            <StaticResource x:Key="TextControlForegroundFocused" ResourceKey="MintTextBrush" />
+            <StaticResource x:Key="TextControlSelectionHighlightColor" ResourceKey="MintAccentBrush" />
+            <Thickness x:Key="TextControlBorderThemeThicknessFocused">1</Thickness>
+
+            <!-- Buttons -->
+            <StaticResource x:Key="ButtonBackground" ResourceKey="MintButtonBrush" />
+            <StaticResource x:Key="ButtonBackgroundPointerOver" ResourceKey="MintButtonHoverBrush" />
+            <StaticResource x:Key="ButtonBackgroundPressed" ResourceKey="MintButtonPressedBrush" />
+            <StaticResource x:Key="ButtonBorderBrush" ResourceKey="MintBorderBrush" />
+            <StaticResource x:Key="ButtonBorderBrushPointerOver" ResourceKey="MintBorderBrush" />
+            <StaticResource x:Key="ButtonBorderBrushPressed" ResourceKey="MintBorderBrush" />
+            <StaticResource x:Key="ButtonForeground" ResourceKey="MintTextBrush" />
+            <StaticResource x:Key="ButtonForegroundPointerOver" ResourceKey="MintTextBrush" />
+            <StaticResource x:Key="ButtonForegroundPressed" ResourceKey="MintTextBrush" />
+            <StaticResource x:Key="ButtonForegroundDisabled" ResourceKey="MintDisabledTextBrush" />
+
+            <!-- Combo boxes -->
+            <StaticResource x:Key="ComboBoxBackground" ResourceKey="MintButtonBrush" />
+            <StaticResource x:Key="ComboBoxBackgroundPointerOver" ResourceKey="MintButtonHoverBrush" />
+            <StaticResource x:Key="ComboBoxBackgroundPressed" ResourceKey="MintButtonPressedBrush" />
+            <StaticResource x:Key="ComboBoxBackgroundUnfocused" ResourceKey="MintButtonBrush" />
+            <StaticResource x:Key="ComboBoxBorderBrush" ResourceKey="MintBorderBrush" />
+            <StaticResource x:Key="ComboBoxBorderBrushPointerOver" ResourceKey="MintBorderBrush" />
+            <StaticResource x:Key="ComboBoxBorderBrushPressed" ResourceKey="MintBorderBrush" />
+            <StaticResource x:Key="ComboBoxForeground" ResourceKey="MintTextBrush" />
+            <StaticResource x:Key="ComboBoxDropDownBackground" ResourceKey="MintWindowBrush" />
+            <StaticResource x:Key="ComboBoxDropDownBorderBrush" ResourceKey="MintBorderBrush" />
+            <StaticResource x:Key="ComboBoxDropDownGlyphForeground" ResourceKey="MintTextBrush" />
+            <StaticResource x:Key="ComboBoxItemBackgroundPointerOver" ResourceKey="MintHoverBrush" />
+            <StaticResource x:Key="ComboBoxItemBackgroundSelected" ResourceKey="MintAccentBrush" />
+            <StaticResource x:Key="ComboBoxItemBackgroundSelectedPointerOver" ResourceKey="MintAccentBrush" />
+            <StaticResource x:Key="ComboBoxItemForegroundSelected" ResourceKey="MintSelectedTextBrush" />
+            <StaticResource x:Key="ComboBoxItemForegroundSelectedPointerOver" ResourceKey="MintSelectedTextBrush" />
+
+            <!-- Check boxes -->
+            <StaticResource x:Key="CheckBoxCheckBackgroundFillUnchecked" ResourceKey="MintEntryBrush" />
+            <StaticResource x:Key="CheckBoxCheckBackgroundFillUncheckedPointerOver" ResourceKey="MintEntryBrush" />
+            <StaticResource x:Key="CheckBoxCheckBackgroundStrokeUnchecked" ResourceKey="MintBorderBrush" />
+            <StaticResource x:Key="CheckBoxCheckBackgroundStrokeUncheckedPointerOver" ResourceKey="MintBorderBrush" />
+            <StaticResource x:Key="CheckBoxCheckBackgroundFillChecked" ResourceKey="MintAccentBrush" />
+            <StaticResource x:Key="CheckBoxCheckBackgroundFillCheckedPointerOver" ResourceKey="MintAccentBrush" />
+            <StaticResource x:Key="CheckBoxCheckGlyphForegroundChecked" ResourceKey="MintSelectedTextBrush" />
+            <StaticResource x:Key="CheckBoxCheckGlyphForegroundCheckedPointerOver" ResourceKey="MintSelectedTextBrush" />
+            <StaticResource x:Key="CheckBoxForegroundUnchecked" ResourceKey="MintTextBrush" />
+            <StaticResource x:Key="CheckBoxForegroundChecked" ResourceKey="MintTextBrush" />
+
+            <!-- Menus: highlighted items use the accent, like Mint -->
+            <StaticResource x:Key="MenuFlyoutPresenterBackground" ResourceKey="MintWindowBrush" />
+            <StaticResource x:Key="MenuFlyoutPresenterBorderBrush" ResourceKey="MintBorderBrush" />
+            <StaticResource x:Key="MenuFlyoutItemBackgroundPointerOver" ResourceKey="MintAccentBrush" />
+            <StaticResource x:Key="MenuFlyoutItemBackgroundPressed" ResourceKey="MintAccentBrush" />
+            <StaticResource x:Key="MenuFlyoutItemForeground" ResourceKey="MintTextBrush" />
+            <StaticResource x:Key="MenuFlyoutItemForegroundPointerOver" ResourceKey="MintSelectedTextBrush" />
+            <StaticResource x:Key="MenuFlyoutItemForegroundPressed" ResourceKey="MintSelectedTextBrush" />
+            <StaticResource x:Key="MenuFlyoutItemForegroundDisabled" ResourceKey="MintDisabledTextBrush" />
+
+            <!-- List boxes (profile list) -->
+            <StaticResource x:Key="SystemControlHighlightListLowBrush" ResourceKey="MintHoverBrush" />
+            <StaticResource x:Key="SystemControlHighlightListAccentLowBrush" ResourceKey="MintAccentBrush" />
+            <StaticResource x:Key="SystemControlHighlightListAccentMediumBrush" ResourceKey="MintAccentBrush" />
+            <StaticResource x:Key="SystemControlHighlightListAccentHighBrush" ResourceKey="MintAccentBrush" />
+
+            <!-- Tooltips -->
+            <StaticResource x:Key="ToolTipBackground" ResourceKey="MintChromeBrush" />
+            <StaticResource x:Key="ToolTipBorderBrush" ResourceKey="MintBorderBrush" />
+            <StaticResource x:Key="ToolTipForeground" ResourceKey="MintTextBrush" />
+
+            <!-- DataGrid (file lists) -->
+            <StaticResource x:Key="DataGridRowBackgroundBrush" ResourceKey="MintViewBrush" />
+            <!-- Cells must stay transparent, or they cover the row's selection highlight. -->
+            <SolidColorBrush x:Key="DataGridCellBackgroundBrush" Color="Transparent" />
+            <StaticResource x:Key="DataGridColumnHeaderBackgroundBrush" ResourceKey="MintSidebarBrush" />
+            <StaticResource x:Key="DataGridColumnHeaderHoveredBackgroundBrush" ResourceKey="MintHoverBrush" />
+            <StaticResource x:Key="DataGridColumnHeaderPressedBackgroundBrush" ResourceKey="MintButtonPressedBrush" />
+            <StaticResource x:Key="DataGridColumnHeaderForegroundBrush" ResourceKey="MintDimTextBrush" />
+            <StaticResource x:Key="DataGridGridLinesBrush" ResourceKey="MintBorderBrush" />
+            <StaticResource x:Key="DataGridRowSelectedBackgroundBrush" ResourceKey="MintAccentBrush" />
+            <StaticResource x:Key="DataGridRowSelectedHoveredBackgroundBrush" ResourceKey="MintAccentBrush" />
+            <StaticResource x:Key="DataGridRowSelectedUnfocusedBackgroundBrush" ResourceKey="MintAccentBrush" />
+            <StaticResource x:Key="DataGridRowSelectedHoveredUnfocusedBackgroundBrush" ResourceKey="MintAccentBrush" />
+            <x:Double x:Key="DataGridRowSelectedBackgroundOpacity">1</x:Double>
+            <x:Double x:Key="DataGridRowSelectedHoveredBackgroundOpacity">1</x:Double>
+            <x:Double x:Key="DataGridRowSelectedUnfocusedBackgroundOpacity">1</x:Double>
+            <x:Double x:Key="DataGridRowSelectedHoveredUnfocusedBackgroundOpacity">1</x:Double>
+            <!-- No box around the current cell; the whole row is highlighted instead, like Nemo. -->
+            <SolidColorBrush x:Key="DataGridCellFocusVisualPrimaryBrush" Color="Transparent" />
+            <SolidColorBrush x:Key="DataGridCellFocusVisualSecondaryBrush" Color="Transparent" />
+        </ResourceDictionary>
+    </Styles.Resources>
+
+    <!-- Windows and chrome -->
+    <Style Selector="Window">
+        <Setter Property="Background" Value="{DynamicResource MintWindowBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource MintTextBrush}" />
+    </Style>
+    <Style Selector="Menu">
+        <Setter Property="Background" Value="{DynamicResource MintChromeBrush}" />
+    </Style>
+    <Style Selector="GridSplitter">
+        <Setter Property="Background" Value="{DynamicResource MintChromeBrush}" />
+    </Style>
+
+    <!-- File lists -->
+    <Style Selector="DataGrid">
+        <Setter Property="Background" Value="{DynamicResource MintViewBrush}" />
+        <Setter Property="RowHeight" Value="24" />
+        <Setter Property="BorderThickness" Value="0" />
+    </Style>
+    <Style Selector="DataGridColumnHeader">
+        <Setter Property="MinHeight" Value="26" />
+        <Setter Property="FontSize" Value="{DynamicResource ControlContentThemeFontSize}" />
+        <Setter Property="Padding" Value="8,0" />
+        <!-- Visible dividers between headers, so it's clear where to drag to resize a column. -->
+        <Setter Property="AreSeparatorsVisible" Value="True" />
+        <Setter Property="SeparatorBrush" Value="#5A5A5A" />
+    </Style>
+    <!-- Keep the list scrollbars on screen instead of hiding them until the pointer is over them. -->
+    <Style Selector="DataGrid ScrollBar">
+        <Setter Property="AllowAutoHide" Value="False" />
+    </Style>
+    <!-- Selected rows: solid accent bar with white text, focused or not (like Nemo). -->
+    <Style Selector="DataGridRow:selected">
+        <Setter Property="Foreground" Value="{DynamicResource MintSelectedTextBrush}" />
+    </Style>
+    <Style Selector="DataGridRow:selected /template/ Rectangle#BackgroundRectangle">
+        <Setter Property="Fill" Value="{DynamicResource MintAccentBrush}" />
+        <Setter Property="Opacity" Value="1" />
+    </Style>
+
+    <!--
+        Tooltips: a rounded bubble below the item, with a tail in the middle pointing up at it.
+        Placement "Bottom" centres the bubble under the item, so the tail lines up with its middle.
+        Rich tips (h:Tip.Title / h:Tip.Text) get a bold title over a description; see App.axaml.
+    -->
+    <Style Selector=":is(Control)">
+        <Setter Property="ToolTip.Placement" Value="Bottom" />
+        <Setter Property="ToolTip.VerticalOffset" Value="2" />
+        <Setter Property="ToolTip.HorizontalOffset" Value="0" />
+        <Setter Property="ToolTip.ShowDelay" Value="500" />
+    </Style>
+    <Style Selector="ToolTip">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="MaxWidth" Value="380" />
+        <Setter Property="Foreground" Value="{DynamicResource MintTextBrush}" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Grid RowDefinitions="Auto,*">
+                    <Border Grid.Row="1" Background="{DynamicResource MintTipBrush}"
+                            BorderBrush="{DynamicResource MintTipBorderBrush}" BorderThickness="1"
+                            CornerRadius="6" Padding="12,8" BoxShadow="0 3 10 0 #66000000">
+                        <ContentPresenter Content="{TemplateBinding Content}"
+                                          ContentTemplate="{TemplateBinding ContentTemplate}"
+                                          TextWrapping="Wrap" />
+                    </Border>
+                    <!-- The tail. Drawn after the bubble and overlapping it by 1px, so it hides the
+                         bubble's top border where they meet; the stroke is open along the bottom. -->
+                    <Path Grid.Row="0" HorizontalAlignment="Center" Margin="0,0,0,-1"
+                          Data="M 0,8 L 8,0 L 16,8"
+                          Fill="{DynamicResource MintTipBrush}"
+                          Stroke="{DynamicResource MintTipBorderBrush}" StrokeThickness="1" />
+                </Grid>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+
+    <!-- Shared text classes -->
+    <Style Selector="TextBlock.error">
+        <Setter Property="Foreground" Value="{DynamicResource MintErrorBrush}" />
+    </Style>
+</Styles>

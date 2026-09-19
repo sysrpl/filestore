@@ -1,0 +1,37 @@
+# Build output
+docs/
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+publish/
+artifacts/
+*.nupkg
+
+# IDEs and editors
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.userprefs
+*.swp
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Avalonia designer / test output
+*.log
+TestResults/
+
+# Never commit credentials. The app keeps its encrypted profiles and key in the
+# user's app data folder, not here; these patterns guard against copies.
+profiles.dat
+profiles.key
+profiles.dat.*
+settings.json
+.aws/
+*.pem

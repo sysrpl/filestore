@@ -1,0 +1,32 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="filestore.Views.NewBucketDialog"
+        Title="New Bucket"
+        SizeToContent="Height"
+        Width="480"
+        CanResize="False"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner">
+
+    <StackPanel Margin="20" Spacing="6">
+        <TextBlock Text="Bucket name" />
+        <TextBox x:Name="NameBox" Watermark="e.g. my-project-files" />
+        <TextBlock Text="Lowercase letters, numbers, dots and hyphens; 3 to 63 characters. It must be unique across all of AWS."
+                   TextWrapping="Wrap" Foreground="{DynamicResource MintDimTextBrush}" />
+
+        <TextBlock Text="Region" Margin="0,8,0,0" />
+        <ComboBox x:Name="RegionBox" HorizontalAlignment="Stretch" />
+
+        <CheckBox x:Name="AllowPublicCheck" Margin="0,8,0,0"
+                  Content="Allow public files (turn on ACLs so single files can be made public)" />
+        <TextBlock Margin="0,2,0,0" TextWrapping="Wrap" Foreground="{DynamicResource MintDimTextBrush}"
+                   Text="Files are always private until you make them public. Unticked, the bucket gets the AWS defaults (ACLs off, Block Public Access on); share its files with CloudFront or a bucket policy." />
+
+        <TextBlock x:Name="ErrorText" Classes="error" TextWrapping="Wrap" IsVisible="False" />
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,10,0,0">
+            <Button Content="Create" Classes="accent" IsDefault="True" Click="Create_Click" />
+            <Button Content="Cancel" IsCancel="True" Click="Cancel_Click" />
+        </StackPanel>
+    </StackPanel>
+</Window>

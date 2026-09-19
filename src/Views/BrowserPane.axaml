@@ -1,0 +1,133 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:m="using:filestore.Models"
+             xmlns:h="using:filestore.Helpers"
+             x:Class="filestore.Views.BrowserPane">
+
+    <UserControl.Styles>
+        <Style Selector="Button.icon">
+            <Setter Property="FontFamily" Value="{StaticResource MaterialDesignIcons}" />
+            <Setter Property="FontSize" Value="18" />
+            <Setter Property="Padding" Value="6,3" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
+        <Style Selector="TextBlock.icon">
+            <Setter Property="FontFamily" Value="{StaticResource MaterialDesignIcons}" />
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <!-- S3 access icons: dim lock for private, orange globe for public. -->
+        <Style Selector="TextBlock.icon.access">
+            <Setter Property="Foreground" Value="{DynamicResource MintDimTextBrush}" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="TextBlock.icon.access.public">
+            <Setter Property="Foreground" Value="#E8A33D" />
+        </Style>
+        <Style Selector="TextBlock.icon.container">
+            <Setter Property="Foreground" Value="{DynamicResource MintFolderBrush}" />
+        </Style>
+        <!-- Highlight around the active pane. -->
+        <Style Selector="Border#Frame">
+            <Setter Property="BorderBrush" Value="Transparent" />
+        </Style>
+        <Style Selector="Border#Frame.active">
+            <Setter Property="BorderBrush" Value="{DynamicResource MintAccentBrush}" />
+        </Style>
+    </UserControl.Styles>
+
+    <Border x:Name="Frame" BorderThickness="2">
+        <DockPanel>
+            <!-- Title -->
+            <Border DockPanel.Dock="Top" Padding="10,6" Background="{DynamicResource MintSidebarBrush}">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock x:Name="TitleIcon" Classes="icon" />
+                    <TextBlock x:Name="TitleText" FontWeight="SemiBold" VerticalAlignment="Center" />
+                </StackPanel>
+            </Border>
+
+            <!-- Navigation bar -->
+            <Border DockPanel.Dock="Top" Padding="4" Background="{DynamicResource MintChromeBrush}">
+                <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,*">
+                    <Button x:Name="BackButton" Grid.Column="0" Classes="icon" Content="&#xF004D;"
+                            h:Tip.Title="Back" h:Tip.Text="Go back to the previous folder." Click="Back_Click" />
+                    <Button x:Name="UpButton" Grid.Column="1" Classes="icon" Content="&#xF005D;"
+                            h:Tip.Title="Up" h:Tip.Text="Go to the folder that contains this one." Click="Up_Click" />
+                    <Button Grid.Column="2" Classes="icon" Content="&#xF02DC;"
+                            h:Tip.Title="Home" h:Tip.Text="Go to your home folder, or to the bucket list in the S3 pane." Click="Home_Click" />
+                    <Button Grid.Column="3" Classes="icon" Content="&#xF0450;"
+                            h:Tip.Title="Refresh" h:Tip.Text="Reload this folder." Click="Refresh_Click" />
+                    <TextBox x:Name="PathBox" Grid.Column="4" Margin="4,0,0,0" KeyDown="PathBox_KeyDown" />
+                </Grid>
+            </Border>
+
+            <!-- Footer: item count or error -->
+            <Border DockPanel.Dock="Bottom" Padding="10,3" Background="{DynamicResource MintSidebarBrush}">
+                <TextBlock x:Name="FooterText" TextTrimming="CharacterEllipsis" />
+            </Border>
+
+            <!-- File list -->
+            <Panel>
+                <DataGrid x:Name="FileGrid" x:DataType="m:BrowserItem"
+                          IsReadOnly="True"
+                          SelectionMode="Extended"
+                          CanUserSortColumns="True"
+                          CanUserResizeColumns="True"
+                          HorizontalScrollBarVisibility="Auto"
+                          VerticalScrollBarVisibility="Auto"
+                          GridLinesVisibility="None"
+                          HeadersVisibility="Column"
+                          DoubleTapped="FileGrid_DoubleTapped">
+                    <DataGrid.Columns>
+                        <DataGridTemplateColumn Header="Name" Width="260" MinWidth="60" SortMemberPath="Name" CanUserSort="True"
+                                                CustomSortComparer="{x:Static m:BrowserItemComparer.ByName}">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate x:DataType="m:BrowserItem">
+                                    <!-- A Grid (not a StackPanel) so the name gets "..." when the column is narrow. -->
+                                    <Grid ColumnDefinitions="Auto,*" Margin="8,0">
+                                        <TextBlock Classes="icon" Classes.container="{Binding IsContainer}"
+                                                   Text="{Binding Icon}" />
+                                        <TextBlock Grid.Column="1" Margin="6,0,0,0" Text="{Binding Name}"
+                                                   VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                                    </Grid>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <!-- S3 only (see BrowserPane.Initialize). Filled in after the list loads. -->
+                        <DataGridTemplateColumn Header="Access" Width="64" MinWidth="40" SortMemberPath="Access" CanUserSort="True"
+                                                CustomSortComparer="{x:Static m:BrowserItemComparer.ByAccess}">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate x:DataType="m:BrowserItem">
+                                    <!-- Transparent background so the tooltip shows anywhere in the cell. -->
+                                    <Border Background="Transparent" ToolTip.Tip="{Binding AccessNote}">
+                                        <TextBlock Classes="icon access" Classes.public="{Binding IsPublic}"
+                                                   Text="{Binding AccessIcon}" />
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <DataGridTemplateColumn Header="Size" Width="90" MinWidth="40" SortMemberPath="Size" CanUserSort="True"
+                                                CustomSortComparer="{x:Static m:BrowserItemComparer.BySize}">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate x:DataType="m:BrowserItem">
+                                    <TextBlock Text="{Binding SizeText}" HorizontalAlignment="Right"
+                                               VerticalAlignment="Center" Margin="8,0" />
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <DataGridTextColumn Header="Modified" Width="140" MinWidth="40" SortMemberPath="Modified" CanUserSort="True" Binding="{Binding ModifiedText}"
+                                            CustomSortComparer="{x:Static m:BrowserItemComparer.ByModified}" />
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <TextBlock x:Name="MessageText" IsVisible="False" Margin="24" TextWrapping="Wrap"
+                           HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"
+                           Foreground="{DynamicResource MintDimTextBrush}" />
+            </Panel>
+        </DockPanel>
+    </Border>
+</UserControl>

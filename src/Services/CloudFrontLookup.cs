@@ -1,0 +1,123 @@
+using System.Text.RegularExpressions;
+using Amazon.CloudFront;
+using Amazon.CloudFront.Model;
+using Amazon.Runtime;
+using RegionEndpoint = Amazon.RegionEndpoint;
+
+namespace filestore.Services;
+
+/// <summary>A CloudFront distribution that serves a bucket.</summary>
+/// <param name="Domain">The first alternate domain name (CNAME), or the dxxxx.cloudfront.net name.</param>
+/// <param name="OriginPath">The distribution's origin path, e.g. "/site", or "".</param>
+/// <param name="RequiresSignedUrls">True when plain links won't work (trusted key groups / signers).</param>
+public sealed record BucketDistribution(string Domain, string OriginPath, bool RequiresSignedUrls)
+{
+    /// <summary>The CloudFront URL for an object key, or null if the key is outside the origin path.</summary>
+    public string? UrlFor(string key)
+    {
+        // Origin path "/site" means https://domain/x serves the key "site/x".
+        var prefix = OriginPath.Trim('/');
+        if (prefix.Length > 0)
+        {
+            if (!key.StartsWith(prefix + "/", StringComparison.Ordinal))
+                return null;
+            key = key[(prefix.Length + 1)..];
+        }
+        return $"https://{Domain}/{S3BrowserSource.EncodeKey(key)}";
+    }
+}
+
+/// <summary>
+/// Finds the CloudFront distribution in front of each bucket, by listing the account's distributions
+/// and matching the origin of each one's default behavior to an S3 bucket. Results are cached for a
+/// few minutes. Needs the cloudfront:ListDistributions permission; without it no distributions are found.
+/// </summary>
+public sealed class CloudFrontLookup
+{
+    // bucket.s3.amazonaws.com, bucket.s3.us-east-1.amazonaws.com, bucket.s3-website-us-east-1.amazonaws.com, ...
+    private static readonly Regex S3OriginDomain = new(
+        @"^(?<bucket>.+?)\.s3([.-][a-z0-9-]+)*\.amazonaws\.com(\.cn)?$",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+
+    private static readonly TimeSpan CacheFor = TimeSpan.FromMinutes(5);
+
+    private readonly AWSCredentials _credentials;
+    private Task<Dictionary<string, BucketDistribution>>? _distributions;
+    private DateTime _loadedAt;
+
+    public CloudFrontLookup(AWSCredentials credentials)
+    {
+        _credentials = credentials;
+    }
+
+    /// <summary>Why the last lookup found nothing (e.g. no permission), or null if it worked.</summary>
+    public string? LastError { get; private set; }
+
+    public async Task<BucketDistribution?> FindAsync(string bucket, CancellationToken cancellationToken)
+    {
+        if (_distributions is null || DateTime.UtcNow - _loadedAt > CacheFor)
+        {
+            // One shared load; a caller cancelling doesn't cancel it for everyone else.
+            _distributions = LoadAsync();
+            _loadedAt = DateTime.UtcNow;
+        }
+
+        var map = await _distributions.WaitAsync(cancellationToken);
+        return map.GetValueOrDefault(bucket);
+    }
+
+    private async Task<Dictionary<string, BucketDistribution>> LoadAsync()
+    {
+        var map = new Dictionary<string, BucketDistribution>(StringComparer.Ordinal);
+        try
+        {
+            // CloudFront is a global service; its API lives in us-east-1.
+            using var client = new AmazonCloudFrontClient(_credentials, RegionEndpoint.USEast1);
+            var request = new ListDistributionsRequest();
+            DistributionList? list;
+            do
+            {
+                list = (await client.ListDistributionsAsync(request, CancellationToken.None)).DistributionList;
+                foreach (var distribution in list?.Items ?? Enumerable.Empty<DistributionSummary>())
+                    Add(map, distribution);
+                request.Marker = list?.NextMarker;
+            }
+            while (list?.IsTruncated == true);
+
+            LastError = null;
+        }
+        catch (Exception ex)
+        {
+            LastError = ex is AmazonServiceException { ErrorCode: "AccessDenied" }
+                ? "no permission to list CloudFront distributions (cloudfront:ListDistributions)"
+                : ex.Message;
+        }
+        return map;
+    }
+
+    private static void Add(Dictionary<string, BucketDistribution> map, DistributionSummary distribution)
+    {
+        if (distribution.Enabled != true)
+            return;
+
+        var behavior = distribution.DefaultCacheBehavior;
+        var origin = distribution.Origins?.Items?.FirstOrDefault(o => o.Id == behavior?.TargetOriginId);
+        var match = S3OriginDomain.Match(origin?.DomainName ?? "");
+        if (origin is null || !match.Success)
+            return;
+
+        var bucket = match.Groups["bucket"].Value.ToLowerInvariant();
+        var alias = distribution.Aliases?.Items?.FirstOrDefault(a => !a.StartsWith('*'));
+        var found = new BucketDistribution(
+            alias ?? distribution.DomainName,
+            origin.OriginPath ?? "",
+            behavior?.TrustedKeyGroups?.Enabled == true || behavior?.TrustedSigners?.Enabled == true);
+
+        // Several distributions for one bucket: prefer one with a custom domain.
+        if (!map.TryGetValue(bucket, out var existing)
+            || (alias is not null && existing.Domain.EndsWith(".cloudfront.net", StringComparison.OrdinalIgnoreCase)))
+        {
+            map[bucket] = found;
+        }
+    }
+}

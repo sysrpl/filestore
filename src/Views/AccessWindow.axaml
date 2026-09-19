@@ -1,0 +1,89 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:m="using:filestore.Models"
+        xmlns:h="using:filestore.Helpers"
+        x:Class="filestore.Views.AccessWindow"
+        Title="Public or Private"
+        Width="620" Height="440"
+        MinWidth="420" MinHeight="300"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner">
+
+    <Window.Styles>
+        <Style Selector="TextBlock.icon">
+            <Setter Property="FontFamily" Value="{StaticResource MaterialDesignIcons}" />
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="TextBlock.state">
+            <Setter Property="Foreground" Value="{DynamicResource MintDimTextBrush}" />
+        </Style>
+        <Style Selector="TextBlock.state.public">
+            <Setter Property="Foreground" Value="#E8A33D" />
+        </Style>
+        <Style Selector="ListBox#FileList">
+            <Setter Property="Background" Value="{DynamicResource MintViewBrush}" />
+        </Style>
+        <Style Selector="ListBox#FileList ListBoxItem">
+            <Setter Property="Padding" Value="8,3" />
+            <Setter Property="MinHeight" Value="0" />
+        </Style>
+    </Window.Styles>
+
+    <DockPanel Margin="16">
+        <TextBlock x:Name="HeaderText" DockPanel.Dock="Top" TextWrapping="Wrap" Margin="0,0,0,10" />
+
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right"
+                    Spacing="8" Margin="0,14,0,0">
+            <Button Click="MakePrivate_Click" h:Tip.Title="Make private" h:Tip.Text="Only the bucket owner and AWS accounts it grants can read these files.">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <TextBlock Classes="icon" Text="&#xF033E;" />
+                    <TextBlock Text="Make private" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+            <Button x:Name="MakePublicButton" Click="MakePublic_Click"
+                    h:Tip.Title="Make public" h:Tip.Text="Anyone with the link can read these files (public-read ACL).">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <TextBlock Classes="icon" Text="&#xF0FC6;" Foreground="#E8A33D" />
+                    <TextBlock Text="Make public" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+            <Button x:Name="AllowPublicButton" Click="AllowPublic_Click" IsVisible="False"
+                    h:Tip.Title="Allow public files, then make public" h:Tip.Text="Turn on ACLs for this bucket and allow public ACLs in its Block Public Access settings, then make these files public.">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <TextBlock Classes="icon" Text="&#xF0FC6;" Foreground="#E8A33D" />
+                    <TextBlock Text="Allow public files in bucket, then make public" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+            <Button Content="Cancel" Click="Cancel_Click" IsCancel="True" />
+        </StackPanel>
+
+        <!-- Shown when the bucket's settings mean files can't be made public. -->
+        <TextBlock x:Name="WarningText" DockPanel.Dock="Bottom" Margin="0,8,0,0" TextWrapping="Wrap"
+                   Foreground="#E8A33D" IsVisible="False" />
+
+        <TextBlock DockPanel.Dock="Bottom" Margin="0,8,0,0" TextWrapping="Wrap"
+                   Foreground="{DynamicResource MintDimTextBrush}"
+                   Text="Hover over a state to see why. This changes each file's ACL, so it has no effect in buckets with ACLs turned off, and a public bucket policy still applies." />
+
+        <!-- The same items as the S3 pane, so states still being checked fill in here too. -->
+        <ListBox x:Name="FileList" SelectionMode="Single">
+            <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="m:BrowserItem">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <TextBlock Classes="icon" Text="{Binding Icon}" Margin="0,0,8,0" />
+                        <TextBlock Grid.Column="1" Text="{Binding Name}" VerticalAlignment="Center"
+                                   TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Path}" />
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" Margin="12,0,0,0"
+                                    Background="Transparent" ToolTip.Tip="{Binding AccessNote}">
+                            <TextBlock Classes="icon state" Classes.public="{Binding IsPublic}"
+                                       Text="{Binding AccessIcon}" />
+                            <TextBlock Classes="state" Classes.public="{Binding IsPublic}"
+                                       Text="{Binding AccessText}" VerticalAlignment="Center" MinWidth="70" />
+                        </StackPanel>
+                    </Grid>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </DockPanel>
+</Window>

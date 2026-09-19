@@ -1,0 +1,267 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:m="using:filestore.Models"
+        xmlns:h="using:filestore.Helpers"
+        xmlns:v="using:filestore.Views"
+        x:Class="filestore.Views.MainWindow"
+        Title="S3 File Explorer"
+        Width="1024" Height="700"
+        WindowStartupLocation="CenterScreen">
+
+    <Window.Styles>
+        <Style Selector="Button.transfer">
+            <Setter Property="FontFamily" Value="{StaticResource MaterialDesignIcons}" />
+            <Setter Property="FontSize" Value="20" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="Padding" Value="0,5" />
+        </Style>
+        <Style Selector="ToggleButton.transfer">
+            <Setter Property="FontFamily" Value="{StaticResource MaterialDesignIcons}" />
+            <Setter Property="FontSize" Value="20" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="Padding" Value="0,5" />
+        </Style>
+        <!-- Public uploads: keep the button gray (not the accent fill) but make the open lock orange. -->
+        <Style Selector="ToggleButton.transfer:checked /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource MintButtonBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource MintBorderBrush}" />
+            <Setter Property="Foreground" Value="#E8A33D" />
+        </Style>
+        <Style Selector="ToggleButton.transfer:checked:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource MintButtonHoverBrush}" />
+        </Style>
+        <!-- Toolbar buttons: flat, an icon beside a label. -->
+        <Style Selector="Button.tool">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="8,4" />
+        </Style>
+        <Style Selector="Button.tool TextBlock.icon">
+            <Setter Property="FontFamily" Value="{StaticResource MaterialDesignIcons}" />
+            <Setter Property="FontSize" Value="18" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Button.tool TextBlock.label">
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <!-- Preferences > "Show captions on toolbar buttons" off: icons only. -->
+        <Style Selector="Border#Toolbar.noCaptions Button.tool TextBlock.label">
+            <Setter Property="IsVisible" Value="False" />
+        </Style>
+        <Style Selector="Border.toolSeparator">
+            <Setter Property="Width" Value="1" />
+            <Setter Property="Margin" Value="6,4" />
+            <Setter Property="Background" Value="{DynamicResource MintHoverBrush}" />
+        </Style>
+        <Style Selector="ListBox#ActivityList">
+            <Setter Property="Background" Value="{DynamicResource MintViewBrush}" />
+        </Style>
+        <Style Selector="ListBox#ActivityList ListBoxItem">
+            <Setter Property="Padding" Value="8,1" />
+            <Setter Property="MinHeight" Value="0" />
+        </Style>
+    </Window.Styles>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" MinHeight="150" />
+            <RowDefinition Height="5" />
+            <!-- Activity area: at least 80px, drag the splitter above it to make it taller. -->
+            <RowDefinition Height="140" MinHeight="80" />
+        </Grid.RowDefinitions>
+
+        <Menu Grid.Row="0">
+            <!-- Shortcuts are handled in MainWindow's KeyDown; InputGesture only shows them. -->
+            <MenuItem Header="_File">
+                <!-- New Bucket replaces New Folder while the S3 pane shows the bucket list. -->
+                <MenuItem x:Name="NewFolderMenuItem" Header="_New Folder..." InputGesture="Ctrl+Shift+N" Click="NewFolder_Click" />
+                <MenuItem x:Name="NewBucketMenuItem" Header="New _Bucket..." InputGesture="Ctrl+Shift+N"
+                          Click="NewBucket_Click" IsVisible="False" />
+                <Separator />
+                <!-- Items are filled in from code: one per profile, then "Manage Profiles..." -->
+                <MenuItem x:Name="ProfilesMenu" Header="_Profiles" />
+                <Separator />
+                <MenuItem Header="E_xit" Click="Exit_Click" />
+            </MenuItem>
+            <MenuItem Header="_Edit">
+                <MenuItem Header="_Copy" InputGesture="Ctrl+C" Click="Copy_Click" />
+                <MenuItem Header="_Paste" InputGesture="Ctrl+V" Click="Paste_Click" />
+                <Separator />
+                <MenuItem x:Name="RenameMenuItem" Header="_Rename..." InputGesture="F2" Click="Rename_Click" />
+                <MenuItem x:Name="DeleteMenuItem" Header="_Delete..." InputGesture="Delete" Click="Delete_Click" />
+                <Separator />
+                <MenuItem Header="Pr_eferences..." Click="Preferences_Click" />
+            </MenuItem>
+            <MenuItem Header="_Help">
+                <MenuItem Header="_About S3 File Explorer" Click="About_Click" />
+            </MenuItem>
+        </Menu>
+
+        <!-- Toolbar -->
+        <Border x:Name="Toolbar" Grid.Row="1" Padding="4,2" Background="{DynamicResource MintChromeBrush}"
+                BorderBrush="{DynamicResource MintBorderBrush}" BorderThickness="0,0,0,1">
+            <StackPanel Orientation="Horizontal">
+                <Button Classes="tool" Click="Copy_Click" h:Tip.Title="Copy (Ctrl+C)" h:Tip.Text="Copy the selected items in the active pane. Paste them into the other pane to transfer them.">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <TextBlock Classes="icon" Text="&#xF018F;" />
+                        <TextBlock Classes="label" Text="Copy" />
+                    </StackPanel>
+                </Button>
+                <Button Classes="tool" Click="Paste_Click" h:Tip.Title="Paste (Ctrl+V)" h:Tip.Text="Paste copied items into the active pane's folder: uploads into S3, downloads into Local. Files copied in your file manager can be pasted into S3 too.">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <TextBlock Classes="icon" Text="&#xF0192;" />
+                        <TextBlock Classes="label" Text="Paste" />
+                    </StackPanel>
+                </Button>
+                <Border Classes="toolSeparator" />
+                <Button x:Name="UploadToolButton" Classes="tool" Click="Upload_Click"
+                        h:Tip.Title="Upload" h:Tip.Text="Copy the selected local files and folders to the folder open in the S3 pane.">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <TextBlock Classes="icon" Text="&#xF0167;" />
+                        <TextBlock Classes="label" Text="Upload" />
+                    </StackPanel>
+                </Button>
+                <Button x:Name="DownloadToolButton" Classes="tool" Click="Download_Click"
+                        h:Tip.Title="Download" h:Tip.Text="Copy the selected S3 files and folders to the folder open in the Local pane.">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <TextBlock Classes="icon" Text="&#xF0162;" />
+                        <TextBlock Classes="label" Text="Download" />
+                    </StackPanel>
+                </Button>
+                <Border Classes="toolSeparator" />
+                <Button x:Name="NewFolderToolButton" Classes="tool" Click="NewFolder_Click"
+                        h:Tip.Title="New Folder (Ctrl+Shift+N)" h:Tip.Text="Create a folder inside the folder the active pane is showing.">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <TextBlock Classes="icon" Text="&#xF0257;" />
+                        <TextBlock Classes="label" Text="New Folder" />
+                    </StackPanel>
+                </Button>
+                <!-- Replaces New Folder while the S3 pane is active and showing the bucket list. -->
+                <Button x:Name="NewBucketToolButton" Classes="tool" Click="NewBucket_Click" IsVisible="False"
+                        h:Tip.Title="New Bucket (Ctrl+Shift+N)" h:Tip.Text="Create an S3 bucket in a region you choose.">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <TextBlock Classes="icon" Text="&#xF1416;" />
+                        <TextBlock Classes="label" Text="New Bucket" />
+                    </StackPanel>
+                </Button>
+                <Button x:Name="RenameToolButton" Classes="tool" Click="Rename_Click"
+                        h:Tip.Title="Rename (F2)" h:Tip.Text="Rename the selected file or folder in the active pane.">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <TextBlock Classes="icon" Text="&#xF0455;" />
+                        <TextBlock Classes="label" Text="Rename" />
+                    </StackPanel>
+                </Button>
+                <Button x:Name="DeleteToolButton" Classes="tool" Click="Delete_Click"
+                        h:Tip.Title="Delete (Delete key)" h:Tip.Text="Permanently delete the selected items in the active pane. In the S3 bucket list, delete the selected bucket.">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <TextBlock Classes="icon" Text="&#xF0A7A;" />
+                        <TextBlock Classes="label" Text="Delete" />
+                    </StackPanel>
+                </Button>
+                <Border Classes="toolSeparator" />
+                <Button Classes="tool" Click="Refresh_Click" h:Tip.Title="Refresh" h:Tip.Text="Reload the folder the active pane is showing.">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <TextBlock Classes="icon" Text="&#xF0450;" />
+                        <TextBlock Classes="label" Text="Refresh" />
+                    </StackPanel>
+                </Button>
+                <!-- Only shown while the S3 pane is active and has files selected (see UpdateAccessButton). -->
+                <StackPanel x:Name="AccessToolGroup" Orientation="Horizontal" IsVisible="False">
+                    <Border Classes="toolSeparator" />
+                    <Button x:Name="AccessToolButton" Classes="tool" Click="ChangeAccess_Click"
+                            h:Tip.Title="Public / Private" h:Tip.Text="See whether the selected S3 files are public, and make them public or private.">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBlock Classes="icon" Text="&#xF0CCC;" />
+                            <TextBlock Classes="label" Text="Public / Private" />
+                        </StackPanel>
+                    </Button>
+                    <!-- Only shown when a selected file isn't public (see UpdateToolbar). -->
+                    <Button x:Name="ShareLinkToolButton" Classes="tool" Click="ShareLink_Click"
+                            h:Tip.Title="Temporary Link"
+                            h:Tip.Text="Create a link that lets anyone download the selected private files for a limited time (up to 7 days), and copy it.">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBlock Classes="icon" Text="&#xF10BA;" />
+                            <TextBlock Classes="label" Text="Temporary Link" />
+                        </StackPanel>
+                    </Button>
+                    <!-- Only shown when a selected file has a link anyone can open (see UpdateToolbar). -->
+                    <Button x:Name="CopyUrlToolButton" Classes="tool" Click="CopyUrl_Click"
+                            h:Tip.Title="Copy URL" h:Tip.Text="Copy links to the selected files. Uses the CloudFront address when a distribution serves the bucket.">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBlock Classes="icon" Text="&#xF0339;" />
+                            <TextBlock Classes="label" Text="Copy URL" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+                <Border Classes="toolSeparator" />
+                <Button x:Name="ProfilesToolButton" Classes="tool" Click="ManageProfiles_Click"
+                        h:Tip.Title="Profiles" h:Tip.Text="Add, edit or switch between your AWS accounts.">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <TextBlock Classes="icon" Text="&#xF000B;" />
+                        <TextBlock Classes="label" Text="Profiles" />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Border>
+
+        <!-- Local files on the left, transfer controls in the middle, S3 on the right. -->
+        <Grid Grid.Row="2" ColumnDefinitions="*,Auto,*">
+            <v:BrowserPane x:Name="LocalPane" Grid.Column="0" />
+
+            <Border Grid.Column="1" Width="48" Background="{DynamicResource MintSidebarBrush}"
+                    BorderBrush="{DynamicResource MintBorderBrush}" BorderThickness="1,0">
+                <StackPanel VerticalAlignment="Center" Spacing="6" Margin="6,0">
+                    <Button x:Name="UploadButton" Classes="transfer" Content="&#xF0734;"
+                            h:Tip.Title="Upload" h:Tip.Text="Copy the selected local files and folders to the folder open in the S3 pane."
+                            Click="Upload_Click" />
+                    <Button x:Name="DownloadButton" Classes="transfer" Content="&#xF0731;"
+                            h:Tip.Title="Download" h:Tip.Text="Copy the selected S3 files and folders to the folder open in the Local pane."
+                            Click="Download_Click" />
+
+                    <!-- Upload access: locked = private (default), unlocked = public. Icon and tooltip set in code. -->
+                    <ToggleButton x:Name="PublicToggle" Classes="transfer" Margin="0,16,0,0"
+                                  IsCheckedChanged="PublicToggle_Changed" />
+                </StackPanel>
+            </Border>
+
+            <v:BrowserPane x:Name="S3Pane" Grid.Column="2" />
+        </Grid>
+
+        <GridSplitter Grid.Row="3" ResizeDirection="Rows" />
+
+        <!-- Activity log, with the status line (current message, progress, profile) along the bottom of the window. -->
+        <DockPanel Grid.Row="4">
+            <Border DockPanel.Dock="Bottom" Padding="8,4" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource MintBorderBrush}" Background="{DynamicResource MintSidebarBrush}">
+                <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto">
+                    <TextBlock x:Name="StatusText" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                    <ProgressBar x:Name="TransferProgressBar" Grid.Column="1" Width="220" MinWidth="0"
+                                 Margin="12,0" VerticalAlignment="Center" Minimum="0" Maximum="1"
+                                 IsVisible="False" />
+                    <Button x:Name="CancelTransferButton" Grid.Column="2" Content="Cancel" Padding="10,1"
+                            Margin="0,0,12,0" IsVisible="False" Click="CancelTransfer_Click" />
+                    <Button Grid.Column="3" Content="Clear log" Padding="10,1" Margin="0,0,12,0"
+                            Click="ClearLog_Click" />
+                    <TextBlock x:Name="ProfileText" Grid.Column="4" VerticalAlignment="Center"
+                               Foreground="{DynamicResource MintDimTextBrush}" />
+                </Grid>
+            </Border>
+
+            <ListBox x:Name="ActivityList" SelectionMode="Multiple">
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="m:LogEntry">
+                        <Grid ColumnDefinitions="Auto,*">
+                            <TextBlock Text="{Binding TimeText}" Margin="0,0,12,0"
+                                       Foreground="{DynamicResource MintDimTextBrush}" />
+                            <TextBlock Grid.Column="1" Text="{Binding Message}" Classes.error="{Binding IsError}"
+                                       TextWrapping="Wrap" />
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </DockPanel>
+    </Grid>
+</Window>

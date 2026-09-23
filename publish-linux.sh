@@ -9,6 +9,8 @@ mkdir -p "$HOME/.local/share/applications"
 ICON_DIR="$HOME/.local/share/icons/hicolor/256x256/apps"
 mkdir -p "$ICON_DIR"
 cp resources/icon.png "$ICON_DIR/s3-file-explorer.png"
+# A scalable SVG with the same name would take precedence over the PNG.
+rm -f "$HOME/.local/share/icons/hicolor/scalable/apps/s3-file-explorer.svg"
 
 cat > "$HOME/.local/share/applications/s3-file-explorer.desktop" <<EOF
 [Desktop Entry]

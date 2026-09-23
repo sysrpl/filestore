@@ -196,6 +196,21 @@ public partial class BrowserPane : UserControl
         }
     }
 
+    /// <summary>
+    /// Selects the row for <paramref name="path"/> in the current folder, scrolls to it and focuses
+    /// the list. False if the folder doesn't have it.
+    /// </summary>
+    public bool SelectPath(string path)
+    {
+        if (FileGrid.ItemsSource?.OfType<BrowserItem>().FirstOrDefault(i => i.Path == path) is not { } item)
+            return false;
+
+        FileGrid.SelectedItem = item;
+        FileGrid.ScrollIntoView(item, null);
+        FileGrid.Focus();
+        return true;
+    }
+
     /// <summary>Checks the details (S3 access) of these items again, e.g. after changing them.</summary>
     public Task RecheckDetailsAsync(IReadOnlyList<BrowserItem> items)
     {

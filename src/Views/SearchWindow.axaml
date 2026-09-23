@@ -1,0 +1,126 @@
+<v:DialogWindow xmlns="https://github.com/avaloniaui"
+        xmlns:v="using:filestore.Views"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:m="using:filestore.Models"
+        xmlns:h="using:filestore.Helpers"
+        x:Class="filestore.Views.SearchWindow"
+        Title="Search"
+        Width="860" Height="560"
+        MinWidth="520" MinHeight="360"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner">
+
+    <!-- The results look like the S3 pane's file list (see BrowserPane.axaml). -->
+    <Window.Styles>
+        <Style Selector="TextBlock.icon">
+            <Setter Property="FontFamily" Value="{StaticResource MaterialDesignIcons}" />
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="TextBlock.icon.access">
+            <Setter Property="Foreground" Value="{DynamicResource MintDimTextBrush}" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="TextBlock.icon.access.public">
+            <Setter Property="Foreground" Value="#E8A33D" />
+        </Style>
+    </Window.Styles>
+
+    <DockPanel>
+        <!-- Progress (while searching) and status on the left; Show in Explorer and Close on the right. -->
+        <Grid DockPanel.Dock="Bottom" ColumnDefinitions="Auto,*,Auto">
+            <ProgressBar x:Name="SearchProgress" Width="120" MinWidth="0" Margin="16,0,0,0"
+                         VerticalAlignment="Center" IsIndeterminate="True" IsVisible="False" />
+            <TextBlock x:Name="StatusText" Grid.Column="1" Margin="16,0,8,0" VerticalAlignment="Center"
+                       TextTrimming="CharacterEllipsis" />
+            <StackPanel Grid.Column="2" Classes="dialogButtons">
+                <Button x:Name="ShowInExplorerButton" Content="Show in Explorer" IsEnabled="False"
+                        Click="ShowInExplorer_Click"
+                        h:Tip.Title="Show in Explorer"
+                        h:Tip.Text="Close this window and open the selected file's folder in the S3 pane, with the file selected." />
+                <Button Content="Close" IsCancel="True" Click="Close_Click" />
+            </StackPanel>
+        </Grid>
+
+        <DockPanel Margin="16,16,16,0">
+            <StackPanel DockPanel.Dock="Top" Spacing="6">
+                <TextBlock Text="Search for:" />
+                <TextBox x:Name="PatternBox" Watermark="e.g. *.jpg or fam*.mp4, several separated by ; like *.jpg;*.png" TextChanged="Pattern_Changed" />
+                <Grid ColumnDefinitions="*,Auto,Auto">
+                    <TextBlock x:Name="FolderText" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                               Foreground="{DynamicResource MintDimTextBrush}" />
+                    <!-- Only shown while a search runs. -->
+                    <Button x:Name="StopButton" Grid.Column="1" Content="Stop" IsVisible="False"
+                            Margin="8,0,0,0" Click="Stop_Click"
+                            h:Tip.Title="Stop" h:Tip.Text="End the search now and keep the files found so far." />
+                    <Button x:Name="SearchButton" Grid.Column="2" Content="Search" Classes="accent"
+                            IsDefault="True" IsEnabled="False" Margin="8,0,0,0" Click="Search_Click"
+                            h:Tip.Title="Search"
+                            h:Tip.Text="Find files in this folder and all its subfolders whose names match, ignoring case. * matches any characters and ? matches one; without either, names containing the text match. Separate several patterns with ;, e.g. *.jpg;*.png." />
+                </Grid>
+            </StackPanel>
+
+            <DataGrid x:Name="ResultGrid" x:DataType="m:BrowserItem" Margin="0,8,0,0"
+                      IsReadOnly="True"
+                      SelectionMode="Single"
+                      CanUserSortColumns="True"
+                      CanUserResizeColumns="True"
+                      HorizontalScrollBarVisibility="Auto"
+                      VerticalScrollBarVisibility="Auto"
+                      GridLinesVisibility="None"
+                      HeadersVisibility="Column"
+                      SelectionChanged="ResultGrid_SelectionChanged"
+                      DoubleTapped="ResultGrid_DoubleTapped">
+                <DataGrid.Columns>
+                    <DataGridTemplateColumn Header="Name" Width="220" MinWidth="60" SortMemberPath="Name" CanUserSort="True"
+                                            CustomSortComparer="{x:Static m:BrowserItemComparer.ByName}">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate x:DataType="m:BrowserItem">
+                                <Grid ColumnDefinitions="Auto,*" Margin="8,0">
+                                    <TextBlock Classes="icon" Text="{Binding Icon}" />
+                                    <TextBlock Grid.Column="1" Margin="6,0,0,0" Text="{Binding Name}"
+                                               VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                                </Grid>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <DataGridTemplateColumn Header="Location" Width="260" MinWidth="60" SortMemberPath="Location" CanUserSort="True"
+                                            CustomSortComparer="{x:Static m:BrowserItemComparer.ByLocation}">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate x:DataType="m:BrowserItem">
+                                <TextBlock Text="{Binding Location}" Margin="8,0" VerticalAlignment="Center"
+                                           TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Location}" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <DataGridTemplateColumn Header="Access" Width="90" MinWidth="40" SortMemberPath="Access" CanUserSort="True"
+                                            CustomSortComparer="{x:Static m:BrowserItemComparer.ByAccess}">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate x:DataType="m:BrowserItem">
+                                <Border Background="Transparent" ToolTip.Tip="{Binding AccessNote}">
+                                    <TextBlock Classes="icon access" Classes.public="{Binding IsPublic}"
+                                               Text="{Binding AccessIcon}" />
+                                </Border>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <DataGridTemplateColumn Header="Size" Width="90" MinWidth="40" SortMemberPath="Size" CanUserSort="True"
+                                            CustomSortComparer="{x:Static m:BrowserItemComparer.BySize}">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate x:DataType="m:BrowserItem">
+                                <TextBlock Text="{Binding SizeText}" HorizontalAlignment="Right"
+                                           VerticalAlignment="Center" Margin="8,0" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <DataGridTextColumn Header="Modified" Width="140" MinWidth="40" SortMemberPath="Modified" CanUserSort="True" Binding="{Binding ModifiedText}"
+                                        CustomSortComparer="{x:Static m:BrowserItemComparer.ByModified}" />
+                </DataGrid.Columns>
+            </DataGrid>
+        </DockPanel>
+    </DockPanel>
+</v:DialogWindow>

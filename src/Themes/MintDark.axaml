@@ -155,6 +155,9 @@
             <!-- No box around the current cell; the whole row is highlighted instead, like Nemo. -->
             <SolidColorBrush x:Key="DataGridCellFocusVisualPrimaryBrush" Color="Transparent" />
             <SolidColorBrush x:Key="DataGridCellFocusVisualSecondaryBrush" Color="Transparent" />
+
+            <!-- Scrollbars: thinner than Fluent's 12px. Thumbs are rounded in the styles below. -->
+            <x:Double x:Key="ScrollBarSize">10</x:Double>
         </ResourceDictionary>
     </Styles.Resources>
 
@@ -228,6 +231,19 @@
     <!-- Keep the list scrollbars on screen instead of hiding them until the pointer is over them. -->
     <Style Selector="DataGrid ScrollBar">
         <Setter Property="AllowAutoHide" Value="False" />
+    </Style>
+    <!--
+        Scrollbar thumbs with round ends: the corner radius is half the bar's width. They're at least
+        30px long, so a long list's thumb stays a pill instead of shrinking to a dot. The selectors
+        use :vertical / :horizontal so they win over the sizes Fluent's template sets.
+    -->
+    <Style Selector="ScrollBar:vertical /template/ Thumb">
+        <Setter Property="CornerRadius" Value="5" />
+        <Setter Property="MinHeight" Value="30" />
+    </Style>
+    <Style Selector="ScrollBar:horizontal /template/ Thumb">
+        <Setter Property="CornerRadius" Value="5" />
+        <Setter Property="MinWidth" Value="30" />
     </Style>
     <!-- Selected rows: solid accent bar with white text, focused or not (like Nemo). -->
     <Style Selector="DataGridRow:selected">

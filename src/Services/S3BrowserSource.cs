@@ -1,6 +1,8 @@
+using System.Runtime.CompilerServices;
 using Amazon.Runtime;
 using Amazon.S3;
 using Amazon.S3.Model;
+using filestore.Helpers;
 using filestore.Models;
 using RegionEndpoint = Amazon.RegionEndpoint;
 
@@ -127,14 +129,52 @@ public sealed class S3BrowserSource : IBrowserSource, IDisposable
     }
 
     /// <summary>
-    /// Fills in each file's access (below) and share URL. The share URL is the CloudFront URL when a
-    /// distribution serves the bucket (without signed URLs), otherwise the S3 URL if the file is public.
-    ///
-    /// Works out whether each file in a listed S3 folder is private or public:
-    /// 1. Bucket policy public -> every file is flagged public.
-    /// 2. ACLs disabled (bucket owner enforced) or ignored (Block Public Access) -> every file is private.
-    /// 3. Otherwise each file's ACL is read (up to <see cref="MaxAclChecks"/>, a few at a time).
-    /// Not covered: Block Public Access set for the whole AWS account, which can override a public ACL.
+    /// The files in a folder and all its subfolders whose names match <paramref name="pattern"/>,
+    /// in key order. <paramref name="onChecked"/> gets the number of files looked at so far, after
+    /// each page of the listing.
+    /// </summary>
+    public async IAsyncEnumerable<BrowserItem> SearchAsync(
+        string folderPath, Wildcard pattern, Action<int>? onChecked,
+        [EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        var (bucket, prefix) = SplitPath(folderPath);
+        var client = await GetClientForBucketAsync(bucket, cancellationToken);
+
+        var checkedCount = 0;
+        var request = new ListObjectsV2Request { BucketName = bucket, Prefix = prefix };
+        ListObjectsV2Response response;
+        do
+        {
+            response = await client.ListObjectsV2Async(request, cancellationToken);
+            foreach (var obj in response.S3Objects ?? Enumerable.Empty<S3Object>())
+            {
+                // Skip the empty "folder/" marker objects.
+                if (obj.Key.EndsWith('/'))
+                    continue;
+
+                checkedCount++;
+                var name = obj.Key[(obj.Key.LastIndexOf('/') + 1)..];
+                if (!pattern.IsMatch(name))
+                    continue;
+
+                yield return new BrowserItem
+                {
+                    Name = name,
+                    Path = $"{Root}{bucket}/{obj.Key}",
+                    Kind = BrowserItemKind.File,
+                    Size = obj.Size,
+                    Modified = ToLocal(obj.LastModified),
+                };
+            }
+            onChecked?.Invoke(checkedCount);
+            request.ContinuationToken = response.NextContinuationToken;
+        }
+        while (response.IsTruncated == true);
+    }
+
+    /// <summary>
+    /// Fills in each file's access and share URL (see <see cref="AccessChecker"/>). Only the first
+    /// <see cref="MaxAclChecks"/> files have their own ACL read, a few at a time.
     /// </summary>
     public async Task LoadDetailsAsync(IReadOnlyList<BrowserItem> items, CancellationToken cancellationToken)
     {
@@ -142,35 +182,17 @@ public sealed class S3BrowserSource : IBrowserSource, IDisposable
         if (files.Count == 0)
             return;
 
-        var profile = EnsureProfile();
-        var bucket = SplitPath(files[0].Path).Bucket;
-        var region = await GetBucketRegionAsync(bucket, profile, cancellationToken);
-        var client = GetClient(profile, region);
-
-        _cloudFront ??= new CloudFrontLookup(Credentials(profile));
-        var distribution = await _cloudFront.FindAsync(bucket, cancellationToken);
-        if (distribution?.RequiresSignedUrls == true)
-            distribution = null; // plain links wouldn't open
-
-        void SetShareUrl(BrowserItem file)
-        {
-            var key = SplitPath(file.Path).Key;
-            file.ShareUrl = distribution?.UrlFor(key)
-                ?? (file.IsPublic ? PublicObjectUrl(bucket, region, key) : null);
-        }
+        var checker = await CreateAccessCheckerAsync(SplitPath(files[0].Path).Bucket, cancellationToken);
 
         // CloudFront links don't depend on the S3 access checks, so they're available straight away.
         foreach (var file in files)
-            SetShareUrl(file);
+            checker.Apply(file, file.Access, file.AccessNote);
 
-        var (bucketAccess, bucketNote) = await GetBucketAccessAsync(client, bucket, cancellationToken);
+        var (bucketAccess, bucketNote) = await checker.GetBucketAccessAsync();
         if (bucketAccess is { } access)
         {
             foreach (var file in files)
-            {
-                file.SetAccess(access, bucketNote);
-                SetShareUrl(file);
-            }
+                checker.Apply(file, access, bucketNote);
             return;
         }
 
@@ -183,21 +205,97 @@ public sealed class S3BrowserSource : IBrowserSource, IDisposable
             await throttle.WaitAsync(cancellationToken);
             try
             {
-                var (fileAccess, note) = await GetObjectAccessAsync(client, bucket, SplitPath(file.Path).Key, cancellationToken);
-                file.SetAccess(fileAccess, note + bucketNote);
-                SetShareUrl(file);
-            }
-            catch (AmazonS3Exception ex)
-            {
-                file.SetAccess(ObjectAccess.Unknown, ex.ErrorCode == "AccessDenied"
-                    ? "Couldn't check: no permission to read this file's ACL (s3:GetObjectAcl)."
-                    : $"Couldn't check: {ex.Message}");
+                var (fileAccess, note) = await checker.CheckAsync(file, cancellationToken);
+                checker.Apply(file, fileAccess, note);
             }
             finally
             {
                 throttle.Release();
             }
         }));
+    }
+
+    /// <summary>
+    /// Gets ready to check the access of files in <paramref name="bucket"/>: finds its region and
+    /// CloudFront distribution. Call on the UI thread; the checker it returns can be used from any thread.
+    /// </summary>
+    public async Task<AccessChecker> CreateAccessCheckerAsync(string bucket, CancellationToken cancellationToken)
+    {
+        var profile = EnsureProfile();
+        var region = await GetBucketRegionAsync(bucket, profile, cancellationToken);
+        var client = GetClient(profile, region);
+
+        _cloudFront ??= new CloudFrontLookup(Credentials(profile));
+        var distribution = await _cloudFront.FindAsync(bucket, cancellationToken);
+        if (distribution?.RequiresSignedUrls == true)
+            distribution = null; // plain links wouldn't open
+
+        return new AccessChecker(client, bucket, region, distribution, cancellationToken);
+    }
+
+    /// <summary>
+    /// Works out whether files in one bucket are private or public, and their share URL:
+    /// 1. Bucket policy public -> every file is flagged public.
+    /// 2. ACLs disabled (bucket owner enforced) or ignored (Block Public Access) -> every file is private.
+    /// 3. Otherwise each file's ACL is read.
+    /// Not covered: Block Public Access set for the whole AWS account, which can override a public ACL.
+    /// The share URL is the CloudFront URL when a distribution serves the bucket (without signed URLs),
+    /// otherwise the S3 URL if the file is public.
+    ///
+    /// The bucket's settings are read once, on the first check. <see cref="CheckAsync"/> is safe to
+    /// call from any thread and doesn't change the item; <see cref="Apply"/> does, on the UI thread.
+    /// </summary>
+    public sealed class AccessChecker
+    {
+        private readonly IAmazonS3 _client;
+        private readonly string _bucket;
+        private readonly string _region;
+        private readonly BucketDistribution? _distribution;
+        private readonly Lazy<Task<(ObjectAccess? Access, string Note)>> _bucketAccess;
+
+        internal AccessChecker(
+            IAmazonS3 client, string bucket, string region, BucketDistribution? distribution,
+            CancellationToken cancellationToken)
+        {
+            _client = client;
+            _bucket = bucket;
+            _region = region;
+            _distribution = distribution;
+            _bucketAccess = new(() => S3BrowserSource.GetBucketAccessAsync(client, bucket, cancellationToken));
+        }
+
+        /// <summary>The access every file in the bucket shares, or null (check each file), plus a note for each file.</summary>
+        public Task<(ObjectAccess? Access, string Note)> GetBucketAccessAsync() => _bucketAccess.Value;
+
+        /// <summary>The file's access and why. S3 errors give <see cref="ObjectAccess.Unknown"/>.</summary>
+        public async Task<(ObjectAccess Access, string Note)> CheckAsync(BrowserItem file, CancellationToken cancellationToken)
+        {
+            var (bucketAccess, bucketNote) = await GetBucketAccessAsync();
+            if (bucketAccess is { } access)
+                return (access, bucketNote);
+
+            try
+            {
+                var (fileAccess, note) = await GetObjectAccessAsync(_client, _bucket, SplitPath(file.Path).Key, cancellationToken);
+                return (fileAccess, note + bucketNote);
+            }
+            catch (AmazonS3Exception ex)
+            {
+                return (ObjectAccess.Unknown, ex.ErrorCode == "AccessDenied"
+                    ? "Couldn't check: no permission to read this file's ACL (s3:GetObjectAcl)."
+                    : $"Couldn't check: {ex.Message}");
+            }
+        }
+
+        /// <summary>Sets the file's access and its share URL to match. Call on the UI thread.</summary>
+        public void Apply(BrowserItem file, ObjectAccess access, string? note)
+        {
+            if (access != ObjectAccess.NotChecked)
+                file.SetAccess(access, note);
+            var key = SplitPath(file.Path).Key;
+            file.ShareUrl = _distribution?.UrlFor(key)
+                ?? (access == ObjectAccess.Public ? PublicObjectUrl(_bucket, _region, key) : null);
+        }
     }
 
     /// <summary>

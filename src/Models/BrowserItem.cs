@@ -45,6 +45,9 @@ public sealed class BrowserItem : INotifyPropertyChanged
     /// <summary>Last modified time (creation time for buckets), in local time.</summary>
     public DateTime? Modified { get; init; }
 
+    /// <summary>The folder holding a file: its path up to the name. Shown for search results.</summary>
+    public string Location => Path[..^Name.Length];
+
     /// <summary>True for buckets and folders, which can be opened.</summary>
     public bool IsContainer => Kind != BrowserItemKind.File;
 
@@ -129,6 +132,7 @@ public sealed class BrowserItemComparer : IComparer, IComparer<BrowserItem>
     public static readonly BrowserItemComparer ByName = new((a, b) => 0);
     public static readonly BrowserItemComparer BySize = new((a, b) => Nullable.Compare(a.Size, b.Size));
     public static readonly BrowserItemComparer ByModified = new((a, b) => Nullable.Compare(a.Modified, b.Modified));
+    public static readonly BrowserItemComparer ByLocation = new((a, b) => StringComparer.CurrentCultureIgnoreCase.Compare(a.Location, b.Location));
     public static readonly BrowserItemComparer ByAccess = new((a, b) => a.Access.CompareTo(b.Access));
 
     private readonly Comparison<BrowserItem> _compare;

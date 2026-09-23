@@ -108,6 +108,9 @@
                 <!-- Enabled for the same selection that shows the Temporary Link toolbar button (see UpdateToolbar). -->
                 <MenuItem x:Name="ShareLinkMenuItem" Header="Temporary _Link..." IsEnabled="False" Click="ShareLink_Click" />
                 <Separator />
+                <!-- Enabled while the S3 pane is inside a bucket, like the Search toolbar button. -->
+                <MenuItem x:Name="SearchMenuItem" Header="_Search..." InputGesture="Ctrl+F" IsEnabled="False" Click="Search_Click" />
+                <Separator />
                 <MenuItem Header="Pr_eferences..." Click="Preferences_Click" />
             </MenuItem>
             <MenuItem Header="_Help">
@@ -181,6 +184,14 @@
                     <StackPanel Orientation="Horizontal" Spacing="6">
                         <TextBlock Classes="icon" Text="&#xF0450;" />
                         <TextBlock Classes="label" Text="Refresh" />
+                    </StackPanel>
+                </Button>
+                <!-- Only shown while the S3 pane is inside a bucket (see UpdateToolbar). -->
+                <Button x:Name="SearchToolButton" Classes="tool" Click="Search_Click" IsVisible="False"
+                        h:Tip.Title="Search (Ctrl+F)" h:Tip.Text="Find files by name, like *.jpg, in the folder open in the S3 pane and all its subfolders.">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <TextBlock Classes="icon" Text="&#xF0349;" />
+                        <TextBlock Classes="label" Text="Search" />
                     </StackPanel>
                 </Button>
                 <!-- Only shown while the S3 pane is active and has files selected (see UpdateAccessButton). -->

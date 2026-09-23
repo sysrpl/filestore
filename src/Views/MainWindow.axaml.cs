@@ -22,6 +22,7 @@ public partial class MainWindow : Window
     private readonly S3BrowserSource _s3Source = null!;
     private readonly TransferService _transfers = null!;
     private readonly SettingsService _settings = null!;
+    private readonly SearchHistory _searchHistory = new();
 
     // The profile the S3 pane is showing; when the active profile changes, the pane reloads.
     private Profile? _s3Profile;
@@ -203,6 +204,9 @@ public partial class MainWindow : Window
     private bool ShowingBucketList() =>
         _activePane == S3Pane && S3Pane.CurrentPath == S3BrowserSource.Root;
 
+    private bool S3PaneInBucket() =>
+        S3Pane.CurrentPath is { } path && path.Length > S3BrowserSource.Root.Length;
+
     /// <summary>The active pane's selection, minus buckets (which can't be renamed or deleted here).</summary>
     private List<BrowserItem> ModifiableSelection() =>
         _activePane.SelectedItems.Where(i => i.Kind != BrowserItemKind.Bucket).ToList();
@@ -231,6 +235,8 @@ public partial class MainWindow : Window
         DeleteToolButton.IsEnabled = DeleteMenuItem.IsEnabled =
             bucketList ? SelectedBuckets().Count == 1 : selected.Count > 0;
 
+        SearchToolButton.IsVisible = SearchMenuItem.IsEnabled = S3PaneInBucket();
+
         var files = _activePane == S3Pane ? SelectedS3Files() : new List<BrowserItem>();
         AccessToolGroup.IsVisible = files.Count > 0;
         CopyUrlToolButton.IsVisible = files.Any(f => f.ShareUrl is not null);
@@ -243,6 +249,27 @@ public partial class MainWindow : Window
 
     private void Refresh_Click(object? sender, RoutedEventArgs e) => _ = _activePane.RefreshAsync();
 
+    private void Search_Click(object? sender, RoutedEventArgs e) => _ = SearchAsync();
+
+    /// <summary>
+    /// Opens the Search dialog for the folder the S3 pane is in. Show in Explorer there opens the
+    /// file's folder in the S3 pane and selects the file.
+    /// </summary>
+    private async Task SearchAsync()
+    {
+        if (!S3PaneInBucket() || S3Pane.CurrentPath is not { } folder)
+            return;
+
+        var file = await SearchWindow.ShowAsync(this, _s3Source, _searchHistory, folder, _profiles.ActiveProfile?.Id);
+        if (file is null)
+            return;
+
+        SetActivePane(S3Pane);
+        await S3Pane.NavigateAsync(file.Location);
+        if (S3Pane.CurrentPath != file.Location || !S3Pane.SelectPath(file.Path))
+            Log($"Couldn't show {file.Path}: it's no longer in {file.Location}.", isError: true);
+    }
+
     private void Window_KeyDown(object? sender, KeyEventArgs e)
     {
         // Leave the keys alone in text boxes (the path boxes), where they edit text.
@@ -254,6 +281,7 @@ public partial class MainWindow : Window
             (KeyModifiers.Control, Key.C) => CopyAsync,
             (KeyModifiers.Control, Key.V) => PasteAsync,
             (KeyModifiers.Control | KeyModifiers.Shift, Key.N) => NewFolderAsync,
+            (KeyModifiers.Control, Key.F) => SearchAsync,
             (KeyModifiers.None, Key.F2) => RenameAsync,
             (KeyModifiers.None, Key.Delete) => DeleteAsync,
             _ => null,

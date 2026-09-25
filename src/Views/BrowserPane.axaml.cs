@@ -294,7 +294,48 @@ public partial class BrowserPane : UserControl
                 GoUp();
                 e.Handled = true;
                 break;
+            default:
+                if (TryJumpToLetter(e))
+                    e.Handled = true;
+                break;
         }
+    }
+
+    /// <summary>
+    /// Typing a character selects the next row whose name starts with it (ignoring case), wrapping
+    /// around; with Shift held, the previous one. Rows are searched in the order they're shown.
+    /// </summary>
+    private bool TryJumpToLetter(KeyEventArgs e)
+    {
+        if ((e.KeyModifiers & ~KeyModifiers.Shift) != KeyModifiers.None)
+            return false;
+        if (e.KeySymbol is not { Length: 1 } symbol || char.IsControl(symbol[0]) || char.IsWhiteSpace(symbol[0]))
+            return false;
+
+        var rows = (FileGrid.CollectionView ?? FileGrid.ItemsSource)?.OfType<BrowserItem>().ToList();
+        if (rows is null || rows.Count == 0)
+            return true;
+
+        // Shift only means "backwards" for letters; for other characters it's needed to type them.
+        var backwards = e.KeyModifiers == KeyModifiers.Shift && char.IsLetter(symbol[0]);
+        var start = FileGrid.SelectedItem is BrowserItem current ? rows.IndexOf(current) : -1;
+        if (start < 0)
+            start = backwards ? rows.Count : -1;
+
+        for (var step = 1; step <= rows.Count; step++)
+        {
+            var index = backwards
+                ? ((start - step) % rows.Count + rows.Count) % rows.Count
+                : (start + step) % rows.Count;
+            var row = rows[index];
+            if (row.Name.StartsWith(symbol, StringComparison.CurrentCultureIgnoreCase))
+            {
+                FileGrid.SelectedItem = row;
+                FileGrid.ScrollIntoView(row, null);
+                break;
+            }
+        }
+        return true;
     }
 
     private void PathBox_KeyDown(object? sender, KeyEventArgs e)

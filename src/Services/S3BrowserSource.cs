@@ -21,6 +21,12 @@ namespace filestore.Services;
 /// <param name="Incomplete">True if counting stopped at the limit, so there is more.</param>
 public sealed record BucketContents(int Files, long Bytes, int OlderVersions, bool Incomplete);
 
+/// <summary>A CloudFront invalidation that was started.</summary>
+/// <param name="Domain">The distribution's domain.</param>
+/// <param name="Id">The invalidation's ID, as shown in the CloudFront console.</param>
+/// <param name="Paths">How many files it covers.</param>
+public sealed record CacheInvalidation(string Domain, string Id, int Paths);
+
 public sealed class S3BrowserSource : IBrowserSource, IDisposable
 {
     public const string Root = "s3://";
@@ -496,6 +502,30 @@ public sealed class S3BrowserSource : IBrowserSource, IDisposable
         var profile = EnsureProfile();
         _cloudFront ??= new CloudFrontLookup(Credentials(profile));
         return (await _cloudFront.FindAsync(bucket, cancellationToken))?.Domain;
+    }
+
+    /// <summary>
+    /// Clears CloudFront's cached copies of these files (all in one bucket) in every distribution that
+    /// serves the bucket, so the next request gets the current version from S3. Returns one result
+    /// per distribution; empty when no distribution serves the bucket (see <see cref="CloudFrontError"/>).
+    /// </summary>
+    public async Task<IReadOnlyList<CacheInvalidation>> InvalidateCacheAsync(
+        IReadOnlyList<string> filePaths, CancellationToken cancellationToken)
+    {
+        var bucket = SplitPath(filePaths[0]).Bucket;
+        var profile = EnsureProfile();
+        var cloudFront = _cloudFront ??= new CloudFrontLookup(Credentials(profile));
+
+        var results = new List<CacheInvalidation>();
+        foreach (var distribution in await cloudFront.FindAllAsync(bucket, cancellationToken))
+        {
+            var paths = filePaths.Select(p => distribution.PathFor(SplitPath(p).Key)).OfType<string>().ToList();
+            if (paths.Count == 0)
+                continue; // all outside this distribution's origin path
+            var id = await cloudFront.InvalidateAsync(distribution, paths, cancellationToken);
+            results.Add(new CacheInvalidation(distribution.Domain, id, paths.Count));
+        }
+        return results;
     }
 
     /// <summary>

@@ -204,6 +204,14 @@
                             <TextBlock Classes="label" Text="Public / Private" />
                         </StackPanel>
                     </Button>
+                    <Button x:Name="InvalidateCacheToolButton" Classes="tool" Click="InvalidateCache_Click"
+                            h:Tip.Title="Invalidate cache"
+                            h:Tip.Text="Tell CloudFront to throw away its cached copies of the selected files, so the next visitor gets the current version from S3 instead of an older one. Use it after replacing a file. Takes a minute or two to finish.">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBlock Classes="icon" Text="&#xF052A;" />
+                            <TextBlock Classes="label" Text="Invalidate Cache" />
+                        </StackPanel>
+                    </Button>
                     <!-- Only shown when a selected file isn't public (see UpdateToolbar). -->
                     <Button x:Name="ShareLinkToolButton" Classes="tool" Click="ShareLink_Click"
                             h:Tip.Title="Temporary Link"

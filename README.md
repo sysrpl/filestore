@@ -18,6 +18,11 @@ Built with .NET 8 and [Avalonia](https://avaloniaui.net/), so it runs on Linux, 
   * **Copy URL** copies a file's permanent link, using the bucket's CloudFront address (found automatically) when there is one.
   * **Temporary Link** creates a link to a private file that expires after the time you choose (up to 7 days).
   * Double clicking a public file opens it in your browser.
+* **CloudFront cache invalidation**: after you replace a file in a bucket that CloudFront serves, visitors can keep getting the old copy until CloudFront's cache expires. Select the files in the S3 pane and press **Invalidate Cache** on the toolbar to make CloudFront fetch the current version from S3 on the next request.
+  * Only the selected files are invalidated, never the whole bucket or folder.
+  * The distributions serving the bucket are found automatically, and each one is invalidated. When a distribution has an origin path, the file's path is adjusted to match it.
+  * Each invalidation's ID is written to the activity log, so you can follow it in the CloudFront console. CloudFront usually finishes within a minute or two.
+  * AWS includes 1,000 invalidation paths a month at no charge; paths beyond that are billed by AWS.
 * **Search**: inside a bucket, Search on the toolbar (or Ctrl+F) finds files by name in the current folder and all its subfolders.
   * Patterns ignore case: `*` matches any characters and `?` matches one, like `*.jpg` or `fam*.mp4`. Text without wildcards matches names that contain it.
   * Search for several patterns at once by separating them with `;`, like `*.jpg;*.png;*.gif`.
@@ -105,6 +110,7 @@ Browsing and transfers need the usual S3 permissions (`s3:ListAllMyBuckets`, `s3
 | Access column | `s3:GetObjectAcl`, `s3:GetBucketPolicyStatus`, `s3:GetBucketPublicAccessBlock`, `s3:GetBucketOwnershipControls` |
 | Public / Private | `s3:PutObjectAcl`, and to allow public files in a bucket `s3:PutBucketOwnershipControls`, `s3:PutBucketPublicAccessBlock` |
 | CloudFront links | `cloudfront:ListDistributions` |
+| Invalidate cache | `cloudfront:ListDistributions`, `cloudfront:CreateInvalidation` |
 | New / delete bucket | `s3:CreateBucket`, `s3:DeleteBucket`, `s3:ListBucketVersions`, `s3:DeleteObjectVersion` |
 
 If a permission is missing, that feature says so in the activity log and the rest of the app keeps working.

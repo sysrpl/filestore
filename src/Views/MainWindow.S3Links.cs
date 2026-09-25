@@ -115,6 +115,47 @@ public partial class MainWindow
         }
     }
 
+    /// <summary>
+    /// Invalidates the selected files in every CloudFront distribution that serves the bucket, so
+    /// CloudFront fetches them from S3 again.
+    /// </summary>
+    private async void InvalidateCache_Click(object? sender, RoutedEventArgs e)
+    {
+        var files = SelectedS3Files();
+        if (files.Count == 0)
+            return;
+
+        InvalidateCacheToolButton.IsEnabled = false;
+        StatusText.Text = $"Invalidating the CloudFront cache for {Plural(files.Count, "file")}...";
+        try
+        {
+            var results = await _s3Source.InvalidateCacheAsync(files.Select(f => f.Path).ToList(), CancellationToken.None);
+            if (results.Count == 0)
+            {
+                var reason = _s3Source.CloudFrontError is { } error
+                    ? $"CloudFront couldn't be checked: {error}."
+                    : "no CloudFront distribution serves these files.";
+                Log($"Nothing to invalidate: {reason}", isError: true);
+                return;
+            }
+
+            var what = files.Count == 1 ? files[0].Path : Plural(files.Count, "file");
+            foreach (var result in results)
+                Log($"Invalidating {what} on {result.Domain} (invalidation {result.Id}); it takes a minute or two to finish");
+        }
+        catch (Exception ex)
+        {
+            var reason = ex is Amazon.Runtime.AmazonServiceException { ErrorCode: "AccessDenied" }
+                ? "no permission to create invalidations (cloudfront:CreateInvalidation)"
+                : ex.Message;
+            Log($"Couldn't invalidate the CloudFront cache: {reason}", isError: true);
+        }
+        finally
+        {
+            InvalidateCacheToolButton.IsEnabled = true;
+        }
+    }
+
     /// <summary>Puts the selected files' links on the clipboard, one per line.</summary>
     private async void CopyUrl_Click(object? sender, RoutedEventArgs e)
     {
